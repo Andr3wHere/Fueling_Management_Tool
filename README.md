@@ -45,7 +45,6 @@ Projekt využívá **offline-first** přístup rozdělený do dvou hlavních vrs
 
 | Fáze | Zaměření |
 | :--- | :--- |
-| **1. kvartál** | Upřesnění rozsahu, analýza rizik, návrh UI obrazovek a výběr technologií. Prototyp pro ověření OCR na reálných fotkách stojanů. |
-| **2. kvartál** | První průběžná verze: správa vozidel, ruční zápis tankování, lokální databáze a historie. Integrace OCR modulu z prototypu. |
-| **3. kvartál** | Dokončení workflow focení a kontroly údajů, GPS poloha, uživatelské účty a synchronizace s online úložištěm. |
-| **4. kvartál** | Uživatelské testování s řidiči, zátěžové testy (offline režim/výpadky sítě), opravy chyb, finální dokumentace a odevzdání. |
+| **do Prosince** | Vytvořit funkční základ mobilní aplikace umožňující pořizování a evidenci záznamů o tankování. |
+| **do Března** | Rozšířit funkční základ aplikace o správu vozidel a základní vyhodnocování údajů o tankování. |
+| **do Června** | Dokončit pokročilé funkce aplikace, implementovat cloudové zálohování a připravit aplikaci k závěrečnému testování. |
