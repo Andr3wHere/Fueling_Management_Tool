@@ -1,0 +1,51 @@
+# Gradle files
+.gradle/
+build/
+*/build/
+**/build/
+.kotlin/
+ksp/
+
+# Do not ignore Gradle wrapper executable and jar
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log/OS Files
+*.log
+
+# Android Studio generated files and folders
+captures/
+out/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Android Profiling
+*.hprof
+
+# Secrets, API keys, credentials
+secrets.properties
+*.jks
+*.keystore
+google-services.json
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
