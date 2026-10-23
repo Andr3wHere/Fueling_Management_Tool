@@ -11,7 +11,7 @@ Tento dokument obsahuje technické požadavky a kroky potřebné pro naklonován
 * **Java Development Kit (JDK):** Java 17 (standardně součástí Android Studia jako Embedded JDK)
 * **Android SDK:**
   * `compileSdk`: **35** (Android 15)
-  * `minSdk`: **28** (Android 9.0 Pie)
+  * `minSdk`: **29** (Android 10.0 Q)
   * `targetSdk`: **35**
 
 ---
@@ -44,7 +44,7 @@ Tento dokument obsahuje technické požadavky a kroky potřebné pro naklonován
    * V případě potřeby lze synchronizaci vyvolat ručně kliknutím na ikonu **Sync Project with Gradle Files** (ikona slona v pravém horním panelu).
 
 4. **Spuštění na emulátoru / fyzickém zařízení:**
-   * V horní liště vyberte cílové zařízení (Android Virtual Device s API $\ge 28$ nebo připojený telefon s povoleným USB laděním).
+   * V horní liště vyberte cílové zařízení (Android Virtual Device s API $\ge 29$ nebo připojený telefon s povoleným USB laděním).
    * Spusťte aplikaci stisknutím zeleného tlačítka **Run** (`Shift + F10`).
 
 ---

@@ -2,7 +2,7 @@
 
 Jednoduchá mobilní aplikace pro systém Android určená k evidenci a správě výdajů za tankování pohonných hmot. Aplikace odstraňuje nutnost zdlouhavého ručního přepisování údajů díky automatickému rozpoznávání načerpaného množství a ceny přímo z fotografie displeje stojanu a stavu tachometru.
 
-Projekt je vyvíjen v pětičlenném týmu (Ondřej Dostál, Jakub Šproch, Jiří Vávra, Kateřina Lucie Vlachová, Marek Drábek).
+Projekt je vyvíjen v pětičlenném týmu (Bc. Ondřej Dostál, Bc. Jakub Šproch, Bc. Jiří Vávra, Bc. Kateřina Lucie Vlachová, Bc. Marek Drábek).
 
 ---
 
@@ -34,7 +34,7 @@ Architektura je navržena jako **offline-first** a dělí se na dvě klíčové 
 ## 📋 Rozsah projektu (Scope)
 
 ### Co aplikace řeší (In Scope):
-* Nativní aplikace pro mobilní zařízení se systémem Android (`minSdk 28`, `compileSdk 35`).
+* Nativní aplikace pro mobilní zařízení se systémem Android (`minSdk 29`, `compileSdk 35`).
 * Evidence a správa profilů vozidel (podpora více vozidel v jedné aplikaci).
 * Pořizování fotografií stojanů (litry, cena) a tachometru (ujeté km) s OCR detekcí.
 * Možnost manuální úpravy a validace rozpoznaných hodnot před uložením.
