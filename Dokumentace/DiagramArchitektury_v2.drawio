@@ -1,0 +1,218 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="RoreYJjRP-AMFmBdPZmN">
+    <mxGraphModel dx="1700" dy="930" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-15" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="&amp;nbsp;Aplikace&amp;nbsp;Fuel Management&amp;nbsp;" vertex="1">
+          <mxGeometry height="845" width="985" x="81" y="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-18" parent="Z1miR-dMZhR8nBLUh4kb-15" style="swimlane;whiteSpace=wrap;html=1;" value="Prezentační Vrstva" vertex="1">
+          <mxGeometry height="234" width="910" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-43" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-18" source="Z1miR-dMZhR8nBLUh4kb-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-26" parent="Z1miR-dMZhR8nBLUh4kb-18" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="FuelingScreen" vertex="1">
+          <mxGeometry height="60" width="120" x="54" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-45" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-18" source="Z1miR-dMZhR8nBLUh4kb-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-27" parent="Z1miR-dMZhR8nBLUh4kb-18" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="HistoryScreen" vertex="1">
+          <mxGeometry height="60" width="120" x="398" y="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-46" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-18" source="Z1miR-dMZhR8nBLUh4kb-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-28" parent="Z1miR-dMZhR8nBLUh4kb-18" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="VehiclesScreen" vertex="1">
+          <mxGeometry height="60" width="120" x="742" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-29" parent="Z1miR-dMZhR8nBLUh4kb-18" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="FuelingViewModel" vertex="1">
+          <mxGeometry height="60" width="120" x="54" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-30" parent="Z1miR-dMZhR8nBLUh4kb-18" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="HistoryViewModel" vertex="1">
+          <mxGeometry height="60" width="120" x="398" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-31" parent="Z1miR-dMZhR8nBLUh4kb-18" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="VehicleViewModel" vertex="1">
+          <mxGeometry height="60" width="120" x="742" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-24" parent="Z1miR-dMZhR8nBLUh4kb-15" style="swimlane;whiteSpace=wrap;html=1;" value="Doménová vrstva" vertex="1">
+          <mxGeometry height="170" width="910" x="40" y="316" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-32" parent="Z1miR-dMZhR8nBLUh4kb-24" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="ProcessFuelStandImageUseCase" vertex="1">
+          <mxGeometry height="60" width="193" x="11.5" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-33" parent="Z1miR-dMZhR8nBLUh4kb-24" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="CalculateConsumptionUseCase" vertex="1">
+          <mxGeometry height="60" width="187" x="525" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-25" parent="Z1miR-dMZhR8nBLUh4kb-15" style="swimlane;whiteSpace=wrap;html=1;" value="Datová vrstva " vertex="1">
+          <mxGeometry height="275" width="910" x="42" y="513" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-54" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-25" source="Z1miR-dMZhR8nBLUh4kb-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.014;exitY=0.805;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-36">
+          <mxGeometry relative="1" x="-0.2403" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-58" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-25" source="Z1miR-dMZhR8nBLUh4kb-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.002;entryY=0.63;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;exitX=0.903;exitY=1.027;exitDx=0;exitDy=0;" target="Z1miR-dMZhR8nBLUh4kb-38">
+          <mxGeometry relative="1" x="0.1545" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-66" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-25" source="Z1miR-dMZhR8nBLUh4kb-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;exitX=0.586;exitY=1.015;exitDx=0;exitDy=0;" target="Z1miR-dMZhR8nBLUh4kb-37">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="319.2" y="213" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-34" parent="Z1miR-dMZhR8nBLUh4kb-25" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="FuelingRepository" vertex="1">
+          <mxGeometry height="60" width="120" x="248.5" y="63" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-57" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-25" source="Z1miR-dMZhR8nBLUh4kb-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;entryX=0.764;entryY=-0.005;entryDx=0;entryDy=0;" target="Z1miR-dMZhR8nBLUh4kb-38">
+          <mxGeometry relative="1" x="0.1602" as="geometry">
+            <mxPoint x="716.8" y="169.33000000000004" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-35" parent="Z1miR-dMZhR8nBLUh4kb-25" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="VehicleRepository" vertex="1">
+          <mxGeometry height="60" width="120" x="496.5" y="63" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-36" parent="Z1miR-dMZhR8nBLUh4kb-25" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="CameraAdapter" vertex="1">
+          <mxGeometry height="60" width="120" x="38.5" y="183" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-38" parent="Z1miR-dMZhR8nBLUh4kb-25" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="DriveBackupService" vertex="1">
+          <mxGeometry height="60" width="120" x="620" y="173" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-37" parent="Z1miR-dMZhR8nBLUh4kb-25" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="LocationAdapter" vertex="1">
+          <mxGeometry height="60" width="120" x="178.5" y="183" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-47" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-32" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="148" y="268.12" />
+              <mxPoint x="148" y="268.12" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-48" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-34">
+          <mxGeometry relative="1" x="-0.0008" as="geometry">
+            <Array as="points">
+              <mxPoint x="178" y="291" />
+              <mxPoint x="358" y="291" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-49" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-33">
+          <mxGeometry relative="1" x="0.0022" as="geometry">
+            <Array as="points">
+              <mxPoint x="528" y="297" />
+              <mxPoint x="658.5" y="297" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-50" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-34">
+          <mxGeometry relative="1" x="-0.0011" as="geometry">
+            <Array as="points">
+              <mxPoint x="468" y="291" />
+              <mxPoint x="392.5" y="291" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-51" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-35">
+          <mxGeometry relative="1" x="0.0744" as="geometry">
+            <Array as="points">
+              <mxPoint x="842" y="595.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-52" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-34">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-53" edge="1" parent="Z1miR-dMZhR8nBLUh4kb-15" source="Z1miR-dMZhR8nBLUh4kb-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-34">
+          <mxGeometry relative="1" x="0.1372" as="geometry">
+            <Array as="points">
+              <mxPoint x="437.5" y="382" />
+              <mxPoint x="437.5" y="597.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-16" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="Systémové služby (Android OS)" vertex="1">
+          <mxGeometry height="137" width="722" x="81" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-39" parent="Z1miR-dMZhR8nBLUh4kb-16" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="Kamera a OCR&lt;div&gt;(CameraX + ML Kit)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="44" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-40" parent="Z1miR-dMZhR8nBLUh4kb-16" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="Poloha&lt;div&gt;(Fused Location)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="180" y="44" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-41" parent="Z1miR-dMZhR8nBLUh4kb-16" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="Lokální Databáze&lt;div&gt;(Room)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="508" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-17" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="Externí Cloud (Google)" vertex="1">
+          <mxGeometry height="137" width="235" x="831" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-42" parent="Z1miR-dMZhR8nBLUh4kb-17" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="GoogleDriveAPI" vertex="1">
+          <mxGeometry height="60" width="120" x="57.5" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-59" edge="1" parent="1" source="Z1miR-dMZhR8nBLUh4kb-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;exitX=0.346;exitY=1.005;exitDx=0;exitDy=0;" target="Z1miR-dMZhR8nBLUh4kb-39">
+          <mxGeometry relative="1" x="0.1445" as="geometry">
+            <Array as="points">
+              <mxPoint x="199.5" y="796.49" />
+              <mxPoint x="199.5" y="796.49" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-71" connectable="0" parent="Z1miR-dMZhR8nBLUh4kb-59" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;" value="Android API" vertex="1">
+          <mxGeometry relative="1" x="-0.2419" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-60" edge="1" parent="1" source="Z1miR-dMZhR8nBLUh4kb-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-40">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="326" y="901.67" />
+              <mxPoint x="326" y="901.67" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-72" connectable="0" parent="Z1miR-dMZhR8nBLUh4kb-60" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;" value="Android API" vertex="1">
+          <mxGeometry relative="1" x="-0.0469" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-61" edge="1" parent="1" source="Z1miR-dMZhR8nBLUh4kb-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-41">
+          <mxGeometry relative="1" x="0.048" as="geometry">
+            <Array as="points">
+              <mxPoint x="458.3" y="799.2" />
+              <mxPoint x="616" y="799.2" />
+            </Array>
+            <mxPoint x="621" y="964" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-69" connectable="0" parent="Z1miR-dMZhR8nBLUh4kb-61" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;" value="Lokální I/O" vertex="1">
+          <mxGeometry relative="1" x="0.0374" y="-1" as="geometry">
+            <mxPoint x="-25" y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-62" edge="1" parent="1" source="Z1miR-dMZhR8nBLUh4kb-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-41">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-70" connectable="0" parent="Z1miR-dMZhR8nBLUh4kb-62" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;" value="Lokální I/O" vertex="1">
+          <mxGeometry relative="1" x="-0.1987" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-63" edge="1" parent="1" source="Z1miR-dMZhR8nBLUh4kb-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.618;exitY=1.004;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;" target="Z1miR-dMZhR8nBLUh4kb-42">
+          <mxGeometry relative="1" x="0.4201" as="geometry">
+            <Array as="points">
+              <mxPoint x="817" y="1008.3" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Z1miR-dMZhR8nBLUh4kb-68" connectable="0" parent="Z1miR-dMZhR8nBLUh4kb-63" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;" value="HTTPS / REST, OAuth 2.0" vertex="1">
+          <mxGeometry relative="1" x="-0.4943" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
