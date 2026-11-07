@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.tooling.preview.Preview
+import cz.ddt.fuelingmanagementtool.ui.theme.FuelingManagementToolTheme
 
 // 1. Definice cílů (tras)
 sealed class Screen(val route: String) {
@@ -61,7 +63,7 @@ fun VehicleListScreen(
         ) {
             Text(
                 text = "Přehled vozidel",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onNavigateToAddVehicle) {
@@ -87,7 +89,7 @@ fun AddVehicleScreen(
         ) {
             Text(
                 text = "Formulář nového vozidla",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onNavigateBack) {
@@ -96,3 +98,52 @@ fun AddVehicleScreen(
         }
     }
 }
+
+@Preview(
+    name = "Prehled vozidel - svetly rezim",
+    showBackground = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO
+)
+@Composable
+private fun VehicleListLightPreview() {
+    FuelingManagementToolTheme(darkTheme = false) {
+        VehicleListScreen(onNavigateToAddVehicle = {})
+    }
+}
+
+@Preview(
+    name = "Prehled vozidel - tmavy rezim",
+    showBackground = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun VehicleListDarkPreview() {
+    FuelingManagementToolTheme(darkTheme = true) {
+        VehicleListScreen(onNavigateToAddVehicle = {})
+    }
+}
+
+@Preview(
+    name = "Pridani vozidla - svetly rezim",
+    showBackground = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO
+)
+@Composable
+private fun AddVehicleLightPreview() {
+    FuelingManagementToolTheme(darkTheme = false) {
+        AddVehicleScreen(onNavigateBack = {})
+    }
+}
+
+@Preview(
+    name = "Pridani vozidla - tmavy rezim",
+    showBackground = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun AddVehicleDarkPreview() {
+    FuelingManagementToolTheme(darkTheme = true) {
+        AddVehicleScreen(onNavigateBack = {})
+    }
+}
+
