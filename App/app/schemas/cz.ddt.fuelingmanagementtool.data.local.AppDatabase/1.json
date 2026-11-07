@@ -1,0 +1,58 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "97611cb9e87f20e32e3e0c2bd4ee80ed",
+    "entities": [
+      {
+        "tableName": "vehicles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `primaryFuelType` TEXT NOT NULL, `primaryTankCapacity` REAL, `secondaryFuelType` TEXT, `secondaryTankCapacity` REAL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "primaryFuelType",
+            "columnName": "primaryFuelType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "primaryTankCapacity",
+            "columnName": "primaryTankCapacity",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "secondaryFuelType",
+            "columnName": "secondaryFuelType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "secondaryTankCapacity",
+            "columnName": "secondaryTankCapacity",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '97611cb9e87f20e32e3e0c2bd4ee80ed')"
+    ]
+  }
+}

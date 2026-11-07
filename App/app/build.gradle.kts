@@ -75,6 +75,9 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+}
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 
     // Camera X
     implementation(libs.androidx.camera.core)
