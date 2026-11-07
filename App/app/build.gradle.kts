@@ -42,6 +42,14 @@ kotlin {
 }
 
 dependencies {
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    // Navigation & Hilt integrace
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -70,4 +78,13 @@ dependencies {
 }
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+
+    // Camera X
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation("com.google.guava:guava:33.0.0-android")
+    // ML Kit
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
 }
