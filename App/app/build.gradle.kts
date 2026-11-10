@@ -69,15 +69,18 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-}
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
+
+    // Testování coroutines (potřebné pro runTest u DAO)
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
 
     // Camera X
     implementation(libs.androidx.camera.core)
@@ -85,6 +88,11 @@ ksp {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     implementation("com.google.guava:guava:33.0.0-android")
+
     // ML Kit
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
