@@ -1,4 +1,4 @@
-package cz.ddt.fuelingmanagementtool.camera
+package cz.ddt.fuelingmanagementtool.feature.camera
 
 import android.graphics.Bitmap
 import android.graphics.Matrix

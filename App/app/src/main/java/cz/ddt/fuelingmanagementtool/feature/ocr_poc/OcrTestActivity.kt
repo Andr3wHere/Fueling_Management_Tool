@@ -10,7 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import cz.ddt.fuelingmanagementtool.camera.CameraViewfinderScreen
+import cz.ddt.fuelingmanagementtool.feature.camera.CameraViewfinderScreen
 import cz.ddt.fuelingmanagementtool.ui.theme.FuelingManagementToolTheme
 
 class OcrTestActivity : ComponentActivity() {

@@ -1,4 +1,4 @@
-package cz.ddt.fuelingmanagementtool.camera
+package cz.ddt.fuelingmanagementtool.feature.camera
 
 import android.graphics.Bitmap
 import com.google.mlkit.vision.common.InputImage

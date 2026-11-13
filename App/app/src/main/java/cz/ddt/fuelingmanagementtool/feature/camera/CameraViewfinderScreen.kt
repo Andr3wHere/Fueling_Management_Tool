@@ -1,4 +1,4 @@
-package cz.ddt.fuelingmanagementtool.camera
+package cz.ddt.fuelingmanagementtool.feature.camera
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -46,6 +46,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import cz.ddt.fuelingmanagementtool.ui.icons.AppIcons
+import cz.ddt.fuelingmanagementtool.ui.icons.arrow_back
+import cz.ddt.fuelingmanagementtool.ui.icons.close
 import cz.ddt.fuelingmanagementtool.ui.theme.FuelDarkPrimary
 import java.util.concurrent.Executors
 
@@ -209,11 +212,11 @@ private fun CameraViewfinderContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
-//                Icon(
-//                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-//                    contentDescription = "Zpět",
-//                    tint = Color.White
-//                )
+                Icon(
+                    imageVector = AppIcons.ArrowBack,
+                    contentDescription = "Zpět",
+                    tint = Color.White
+                )
             }
             Spacer(modifier = Modifier.width(4.dp))
             Text(
@@ -356,12 +359,12 @@ private fun CameraViewfinderContent(
                 onClick = onNavigateBack,
                 modifier = Modifier.size(48.dp)
             ) {
-//                Icon(
-//                    imageVector = Icons.Default.Close,
-//                    contentDescription = "Zavřít",
-//                    tint = Color.White,
-//                    modifier = Modifier.size(24.dp)
-//                )
+                Icon(
+                    imageVector = AppIcons.Close,
+                    contentDescription = "Zavřít",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
