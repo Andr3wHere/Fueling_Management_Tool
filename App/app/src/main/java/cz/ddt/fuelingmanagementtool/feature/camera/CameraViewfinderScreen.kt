@@ -47,14 +47,16 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cz.ddt.fuelingmanagementtool.ui.icons.AppIcons
-import cz.ddt.fuelingmanagementtool.ui.icons.arrow_back
-import cz.ddt.fuelingmanagementtool.ui.icons.close
 import cz.ddt.fuelingmanagementtool.ui.theme.FuelDarkPrimary
 import java.util.concurrent.Executors
+import android.graphics.Bitmap
+import android.util.Log
+
+private const val TAG = "CameraCrop"
 
 @Composable
 fun CameraViewfinderScreen(
-    onTextRecognized: (String) -> Unit,
+    onTextRecognized: (String, Bitmap?) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -96,7 +98,7 @@ fun CameraViewfinderScreen(
 
 @Composable
 private fun CameraViewfinderContent(
-    onTextRecognized: (String) -> Unit,
+    onTextRecognized: (String, Bitmap?) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -302,31 +304,44 @@ private fun CameraViewfinderContent(
                             cameraExecutor,
                             object : ImageCapture.OnImageCapturedCallback() {
                                 override fun onCaptureSuccess(imageProxy: ImageProxy) {
+                                    var previewCopy: Bitmap? = null
                                     try {
-                                        val croppedBitmap = ImageCropper().cropToRect(
-                                            imageProxy = imageProxy,
-                                            rect = reticleRect,
-                                            previewViewSize = previewSize
-                                        )
-                                        imageProxy.close()
+                                        val fullSensorSize = "${imageProxy.width}x${imageProxy.height}"
+
+                                        val croppedBitmap = imageProxy.use { proxy ->
+                                            ImageCropper().cropToRect(
+                                                imageProxy = proxy,
+                                                rect = reticleRect,
+                                                previewViewSize = previewSize
+                                            )
+                                        }
+                                        Log.d(TAG, "ImageProxy closed safely")
+
+                                        val uiRatio = reticleRect.width / reticleRect.height
+                                        val bmpRatio = croppedBitmap.width.toFloat() / croppedBitmap.height
+                                        Log.d(TAG, "Full sensor frame: $fullSensorSize")
+                                        Log.d(TAG, "UI Reticle: ${reticleRect.width.toInt()}x${reticleRect.height.toInt()} (ratio=${"%.3f".format(uiRatio)})")
+                                        Log.d(TAG, "Cropped Bitmap: ${croppedBitmap.width}x${croppedBitmap.height} (ratio=${"%.3f".format(bmpRatio)})")
+
+                                        // Copy before OcrTextRecognizer recycles croppedBitmap
+                                        previewCopy = croppedBitmap.copy(Bitmap.Config.ARGB_8888, false)
 
                                         textRecognizer.recognizeFromBitmap(
                                             bitmap = croppedBitmap,
                                             onSuccess = { recognizedText ->
                                                 isProcessing = false
-                                                onTextRecognized(recognizedText)
+                                                onTextRecognized(recognizedText, previewCopy)
                                             },
                                             onFailure = { exception ->
+                                                previewCopy?.recycle()
                                                 isProcessing = false
-                                                errorMessage =
-                                                    "Rozpoznávání selhalo: ${exception.localizedMessage}"
+                                                errorMessage = "Rozpoznávání selhalo: ${exception.localizedMessage}"
                                             }
                                         )
                                     } catch (e: Exception) {
-                                        imageProxy.close()
+                                        previewCopy?.recycle()
                                         isProcessing = false
-                                        errorMessage =
-                                            "Chyba zpracování snímku: ${e.localizedMessage}"
+                                        errorMessage = "Chyba zpracování snímku: ${e.localizedMessage}"
                                     }
                                 }
 
