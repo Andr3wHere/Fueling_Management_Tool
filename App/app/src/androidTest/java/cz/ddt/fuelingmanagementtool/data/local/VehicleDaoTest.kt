@@ -16,6 +16,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 @RunWith(AndroidJUnit4::class)
 class VehicleDaoTest {
@@ -27,7 +30,6 @@ class VehicleDaoTest {
     fun createDb() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
-            .allowMainThreadQueries()
             .build()
         vehicleDao = database.vehicleDao()
     }
@@ -55,5 +57,22 @@ class VehicleDaoTest {
         assertEquals(1, vehiclesList.size)
         assertEquals(vehicle.name, vehiclesList[0].name)
         assertEquals(vehicle.primaryFuelType, vehiclesList[0].primaryFuelType)
+    }
+    @Test
+    fun daoOperationsDoNotBlockMainThread() = runBlocking {
+        val vehicle = VehicleEntity(
+            id = 2L,
+            name = "VW Passat",
+            primaryFuelType = FuelType.PETROL,
+            primaryTankCapacity = 66.0
+        )
+
+        withContext(Dispatchers.Main) {
+            vehicleDao.insertVehicle(vehicle)
+            val vehiclesList = vehicleDao.getAllVehicles().first()
+
+            assertEquals(1, vehiclesList.size)
+            assertEquals("VW Passat", vehiclesList[0].name)
+        }
     }
 }
