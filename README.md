@@ -63,3 +63,22 @@ Architektura je navržena jako **offline-first** a dělí se na dvě klíčové 
 ## 🛠️ Návod k sestavení a spuštění
 
 Instrukce k instalaci prostředí, sestavení a spuštění projektu naleznete v samostatném souboru [BUILD.md](BUILD.md).
+
+---
+
+---
+
+## 📐 Architektura a správa závislostí
+
+Kompletní dokumentace architektury systému a sekvenční diagram toku dat při tankování jsou dostupné v projektovém prostoru Confluence:
+* [Diagram architektury a datové toky (Confluence)](https://ddt-fuel-management.atlassian.net/wiki/spaces/FMTD/folder/6979588)
+
+### Pravidla pro zápis závislostí (`libs.versions.toml`)
+Správa všech externích knihoven a Gradle pluginů probíhá centrálně přes Gradle Version Catalog v souboru [`App/gradle/libs.versions.toml`](App/gradle/libs.versions.toml). Kontrolu nových verzí zajišťuje automaticky **GitHub Dependabot** (`.github/dependabot.yml`).
+
+Při přidávání nebo aktualizaci knihoven dodržujte následující pravidla:
+1. **Žádné verze natvrdo v `build.gradle.kts`:** Nikdy nezapisujte čísla verzí přímo do `App/app/build.gradle.kts`. Knihovnu vždy přidejte do `libs.versions.toml` a v Gradle souboru použijte její alias (`libs....`).
+2. **Oddělení verzí přes `version.ref`:** Číslo verze definujte v sekci `[versions]` (v `camelCase`, např. `mlkitText = "16.0.1"`) a v sekci `[libraries]` nebo `[plugins]` na něj odkažte přes `version.ref = "mlkitText"`.
+3. **Využití BOM:** U knihoven řízených přes BOM (např. `androidx-compose-bom`) uvádějte verzi pouze u samotného BOM balíčku; jednotlivé moduly zapisujte bez parametru `version`.
+4. **Jmenná konvence:** Aliasy v `[libraries]` a `[plugins]` pište v `kebab-case` (např. `androidx-room-runtime`, `hilt-android`).
+5. **Kontrola PR od Dependabotu:** Automaticky otevřené Pull Requesty slučujte až po ověření, že projekt projde sestavením a testy.
