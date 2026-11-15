@@ -14,7 +14,7 @@ import cz.ddt.fuelingmanagementtool.data.local.entity.VehicleEntity
         VehicleEntity::class,
         FuelRecordEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2)
