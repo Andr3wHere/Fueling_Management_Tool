@@ -1,4 +1,5 @@
 package cz.ddt.fuelingmanagementtool.di
+import cz.ddt.fuelingmanagementtool.data.local.dao.FuelRecordDao
 
 import android.content.Context
 import androidx.room.Room
@@ -31,5 +32,10 @@ object DatabaseModule {
     @Singleton
     fun provideVehicleDao(database: AppDatabase): VehicleDao {
         return database.vehicleDao()
+    }
+    @Provides
+    @Singleton
+    fun provideFuelRecordDao(database: AppDatabase): FuelRecordDao {
+        return database.fuelRecordDao()
     }
 }
