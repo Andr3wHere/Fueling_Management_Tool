@@ -79,8 +79,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // Testování coroutines (potřebné pro runTest u DAO)
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
 
     // Camera X
     implementation(libs.androidx.camera.core)
