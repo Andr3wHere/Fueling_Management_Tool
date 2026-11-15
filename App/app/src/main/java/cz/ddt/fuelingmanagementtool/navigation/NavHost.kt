@@ -2,6 +2,7 @@
 package cz.ddt.fuelingmanagementtool.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,11 +19,15 @@ import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordListScreen
 import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordUi
 import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordViewModel
 
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.format.DateTimeFormatter
+
 sealed class Screen(val route: String) {
     data object VehicleList : Screen("vehicle_list")
     data object AddVehicle : Screen("add_vehicle")
-    data object FuelRecordList : Screen("fuel_record_list")
-    data object EditFuelRecord : Screen("edit_fuel_record")
+    data object FuelRecordList : Screen("fuel_record_list/{vehicleId}")
+    data object EditFuelRecord : Screen("edit_fuel_record/{vehicleId}")
 }
 
 @Composable
@@ -36,12 +41,24 @@ fun AppNavigation() {
     val fuelRecordViewModel: FuelRecordViewModel = hiltViewModel()
     val savedRecords by fuelRecordViewModel.records.collectAsState()
 
+    val isSaving by fuelRecordViewModel.isSaving.collectAsState()
+    val saveError by fuelRecordViewModel.saveError.collectAsState()
+    val saveSuccessful by fuelRecordViewModel.saveSuccessful.collectAsState()
+
+    val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+
     val fuelRecords = savedRecords.map { record ->
         FuelRecordUi(
             id = record.id,
-            date = record.date,
-            liters = record.liters.toString(),
-            price = record.price.toString()
+            date = record.date.format(dateFormatter),
+            liters = formatStoredValue(
+                record.volumeCentilitres,
+                "l"
+            ),
+            price = formatStoredValue(
+                record.totalPriceHalers,
+                "Kč"
+            )
         )
     }
 
@@ -52,29 +69,23 @@ fun AppNavigation() {
 
         // 1. Seznam vozidel
         composable(Screen.VehicleList.route) {
-
             VehicleListScreen(
                 vehicles = vehicles,
-
                 onAddVehicle = {
                     navController.navigate(Screen.AddVehicle.route)
                 },
-
-                onVehicleClick = {
-                    navController.navigate(Screen.FuelRecordList.route)
+                onVehicleClick = { vehicleId ->
+                    navController.navigate("fuel_record_list/$vehicleId")
                 }
             )
         }
 
         // 2. Přidání vozidla
-
         composable(Screen.AddVehicle.route) {
-
             AddVehicleScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-
                 onSave = {
                         name,
                         primaryFuelType,
@@ -95,45 +106,37 @@ fun AppNavigation() {
             )
         }
 
-
-
         // 3. Nové tankování
-        composable(Screen.EditFuelRecord.route) {
+        composable(Screen.EditFuelRecord.route) { backStackEntry ->
+            val vehicleId = backStackEntry.arguments
+                ?.getString("vehicleId")
+                ?.toLongOrNull()
+
+            LaunchedEffect(Unit) {
+                fuelRecordViewModel.clearSaveStatus()
+            }
+
+            LaunchedEffect(saveSuccessful) {
+                if (saveSuccessful) {
+                    fuelRecordViewModel.clearSaveStatus()
+                    navController.popBackStack()
+                }
+            }
 
             EditFuelRecordScreen(
-                onSave = { date, liters, price ->
-
-                    val litersValue = liters
-                        .replace(',', '.')
-                        .toDoubleOrNull()
-
-                    val priceValue = price
-                        .replace(',', '.')
-                        .toDoubleOrNull()
-
-                    if (
-                        date.isNotBlank() &&
-                        litersValue != null &&
-                        litersValue > 0.0 &&
-                        priceValue != null &&
-                        priceValue >= 0.0
-                    ) {
+                onSave = { date, liters, price, unitPrice ->
+                    if (vehicleId != null) {
                         fuelRecordViewModel.saveRecord(
                             date = date,
-                            liters = litersValue,
-                            price = priceValue
+                            liters = liters,
+                            price = price,
+                            unitPrice = unitPrice,
+                            vehicleId = vehicleId
                         )
-
-                        navController.navigate(
-                            Screen.FuelRecordList.route
-                        ) {
-                            popUpTo(Screen.FuelRecordList.route) {
-                                inclusive = true
-                            }
-                        }
                     }
                 },
-
+                isSaving = isSaving,
+                saveError = saveError,
                 onBack = {
                     navController.popBackStack()
                 }
@@ -141,27 +144,46 @@ fun AppNavigation() {
         }
 
         // 4. Historie tankování
-        composable(Screen.FuelRecordList.route) {
-
+        composable(Screen.FuelRecordList.route) { backStackEntry ->
+            val vehicleId = backStackEntry.arguments?.getString("vehicleId")?.toLongOrNull()
             FuelRecordListScreen(
-                records = fuelRecords,
-
-                onAddRecord = {
-                    navController.navigate(
-                        Screen.EditFuelRecord.route
-                    )
+                records = fuelRecords.filter { record ->
+                    savedRecords.any { savedRecord ->
+                        savedRecord.id == record.id &&
+                                savedRecord.vehicleId == vehicleId
+                    }
                 },
-
+                onAddRecord = {
+                    if (vehicleId != null) {
+                        navController.navigate(
+                            "edit_fuel_record/$vehicleId"
+                        )
+                    }
+                },
                 onDeleteRecord = { recordId ->
-
-                    savedRecords.find {
-                        it.id == recordId
+                    savedRecords.find { record ->
+                        record.id == recordId
                     }?.let { record ->
-
                         fuelRecordViewModel.deleteRecord(record)
                     }
                 }
             )
         }
     }
+}
+
+private fun formatStoredValue(
+    value: Long,
+    unit: String
+): String {
+    val formatted = BigDecimal.valueOf(value)
+        .divide(
+            BigDecimal.valueOf(100L),
+            2,
+            RoundingMode.HALF_UP
+        )
+        .toPlainString()
+        .replace('.', ',')
+
+    return "$formatted $unit"
 }

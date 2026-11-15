@@ -19,7 +19,7 @@ import cz.ddt.fuelingmanagementtool.ui.theme.FuelingManagementToolTheme
 import androidx.compose.material.icons.filled.Delete
 
 data class FuelRecordUi(
-    val id: Int,
+    val id: Long,
     val date: String,
     val liters: String,
     val price: String
@@ -29,7 +29,7 @@ data class FuelRecordUi(
 fun FuelRecordListScreen(
     records: List<FuelRecordUi> = emptyList(),
     onAddRecord: () -> Unit = {},
-    onDeleteRecord: (Int) -> Unit = {}
+    onDeleteRecord: (Long) -> Unit = {}
 ) {
     var recordToDelete by remember {
         mutableStateOf<FuelRecordUi?>(null)
@@ -191,9 +191,9 @@ private fun FuelRecordCard(
 }
 
 private val previewRecords = listOf(
-    FuelRecordUi(1, "15. 10. 2026", "42,5 l", "1 520 Kč"),
-    FuelRecordUi(2, "8. 10. 2026", "35,2 l", "1 267 Kč"),
-    FuelRecordUi(3, "1. 10. 2026", "28,4 l", "1 022 Kč")
+    FuelRecordUi(1L, "15. 10. 2026", "42,5 l", "1 520 Kč"),
+    FuelRecordUi(2L, "8. 10. 2026", "35,2 l", "1 267 Kč"),
+    FuelRecordUi(3L, "1. 10. 2026", "28,4 l", "1 022 Kč")
 )
 
 @Preview(

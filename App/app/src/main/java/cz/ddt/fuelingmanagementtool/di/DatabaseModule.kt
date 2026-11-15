@@ -11,6 +11,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import cz.ddt.fuelingmanagementtool.data.local.MIGRATION_2_3
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -25,7 +26,9 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "fueling_management_db"
-        ).build()
+        )
+            .addMigrations(MIGRATION_2_3)
+            .build()
     }
 
     @Provides

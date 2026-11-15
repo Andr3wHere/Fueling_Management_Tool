@@ -12,4 +12,5 @@ data class FuelRecordEntity(
     val volumeCentilitres: Long,
     val totalPriceHalers: Long,
     val unitPriceHalersPerLitre: Long,
+    val vehicleId: Long? = null
 )
