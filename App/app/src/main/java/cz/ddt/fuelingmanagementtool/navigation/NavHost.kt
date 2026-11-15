@@ -1,149 +1,167 @@
+
 package cz.ddt.fuelingmanagementtool.navigation
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.tooling.preview.Preview
-import cz.ddt.fuelingmanagementtool.ui.theme.FuelingManagementToolTheme
 
-// 1. Definice cílů (tras)
+import cz.ddt.fuelingmanagementtool.feature.vehicle.AddVehicleScreen
+import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleListScreen
+import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleViewModel
+
+import cz.ddt.fuelingmanagementtool.feature.fuel_record.EditFuelRecordScreen
+import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordListScreen
+import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordUi
+import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordViewModel
+
 sealed class Screen(val route: String) {
     data object VehicleList : Screen("vehicle_list")
     data object AddVehicle : Screen("add_vehicle")
+    data object FuelRecordList : Screen("fuel_record_list")
+    data object EditFuelRecord : Screen("edit_fuel_record")
 }
 
-// 2. Hlavní navigační uzel (NavHost)
 @Composable
 fun AppNavigation() {
+
     val navController = rememberNavController()
+
+    val vehicleViewModel: VehicleViewModel = hiltViewModel()
+    val vehicles by vehicleViewModel.vehicles.collectAsState()
+
+    val fuelRecordViewModel: FuelRecordViewModel = hiltViewModel()
+    val savedRecords by fuelRecordViewModel.records.collectAsState()
+
+    val fuelRecords = savedRecords.map { record ->
+        FuelRecordUi(
+            id = record.id,
+            date = record.date,
+            liters = record.liters.toString(),
+            price = record.price.toString()
+        )
+    }
 
     NavHost(
         navController = navController,
         startDestination = Screen.VehicleList.route
     ) {
-        // Obrazovka 1: Přehled vozidel
-        composable(route = Screen.VehicleList.route) {
+
+        // 1. Seznam vozidel
+        composable(Screen.VehicleList.route) {
+
             VehicleListScreen(
-                onNavigateToAddVehicle = {
+                vehicles = vehicles,
+
+                onAddVehicle = {
                     navController.navigate(Screen.AddVehicle.route)
+                },
+
+                onVehicleClick = {
+                    navController.navigate(Screen.FuelRecordList.route)
                 }
             )
         }
 
-        // Obrazovka 2: Formulář nového vozidla
-        composable(route = Screen.AddVehicle.route) {
+        // 2. Přidání vozidla
+
+        composable(Screen.AddVehicle.route) {
+
             AddVehicleScreen(
                 onNavigateBack = {
+                    navController.popBackStack()
+                },
+
+                onSave = {
+                        name,
+                        primaryFuelType,
+                        primaryTankCapacity,
+                        secondaryFuelType,
+                        secondaryTankCapacity ->
+
+                    vehicleViewModel.addVehicle(
+                        name = name,
+                        primaryFuelType = primaryFuelType,
+                        primaryTankCapacity = primaryTankCapacity,
+                        secondaryFuelType = secondaryFuelType,
+                        secondaryTankCapacity = secondaryTankCapacity
+                    )
+
                     navController.popBackStack()
                 }
             )
         }
-    }
-}
 
-// 3. Zástupná obrazovka přehledu
-@Composable
-fun VehicleListScreen(
-    onNavigateToAddVehicle: () -> Unit
-) {
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Přehled vozidel",
-                style = MaterialTheme.typography.headlineLarge
+
+
+        // 3. Nové tankování
+        composable(Screen.EditFuelRecord.route) {
+
+            EditFuelRecordScreen(
+                onSave = { date, liters, price ->
+
+                    val litersValue = liters
+                        .replace(',', '.')
+                        .toDoubleOrNull()
+
+                    val priceValue = price
+                        .replace(',', '.')
+                        .toDoubleOrNull()
+
+                    if (
+                        date.isNotBlank() &&
+                        litersValue != null &&
+                        litersValue > 0.0 &&
+                        priceValue != null &&
+                        priceValue >= 0.0
+                    ) {
+                        fuelRecordViewModel.saveRecord(
+                            date = date,
+                            liters = litersValue,
+                            price = priceValue
+                        )
+
+                        navController.navigate(
+                            Screen.FuelRecordList.route
+                        ) {
+                            popUpTo(Screen.FuelRecordList.route) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                },
+
+                onBack = {
+                    navController.popBackStack()
+                }
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onNavigateToAddVehicle) {
-                Text("Přidat nové vozidlo")
-            }
+        }
+
+        // 4. Historie tankování
+        composable(Screen.FuelRecordList.route) {
+
+            FuelRecordListScreen(
+                records = fuelRecords,
+
+                onAddRecord = {
+                    navController.navigate(
+                        Screen.EditFuelRecord.route
+                    )
+                },
+
+                onDeleteRecord = { recordId ->
+
+                    savedRecords.find {
+                        it.id == recordId
+                    }?.let { record ->
+
+                        fuelRecordViewModel.deleteRecord(record)
+                    }
+                }
+            )
         }
     }
 }
-
-// 4. Zástupná obrazovka formuláře
-@Composable
-fun AddVehicleScreen(
-    onNavigateBack: () -> Unit
-) {
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Formulář nového vozidla",
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onNavigateBack) {
-                Text("Zpět na přehled")
-            }
-        }
-    }
-}
-
-@Preview(
-    name = "Prehled vozidel - svetly rezim",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun VehicleListLightPreview() {
-    FuelingManagementToolTheme(darkTheme = false) {
-        VehicleListScreen(onNavigateToAddVehicle = {})
-    }
-}
-
-@Preview(
-    name = "Prehled vozidel - tmavy rezim",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun VehicleListDarkPreview() {
-    FuelingManagementToolTheme(darkTheme = true) {
-        VehicleListScreen(onNavigateToAddVehicle = {})
-    }
-}
-
-@Preview(
-    name = "Pridani vozidla - svetly rezim",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun AddVehicleLightPreview() {
-    FuelingManagementToolTheme(darkTheme = false) {
-        AddVehicleScreen(onNavigateBack = {})
-    }
-}
-
-@Preview(
-    name = "Pridani vozidla - tmavy rezim",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun AddVehicleDarkPreview() {
-    FuelingManagementToolTheme(darkTheme = true) {
-        AddVehicleScreen(onNavigateBack = {})
-    }
-}
-
