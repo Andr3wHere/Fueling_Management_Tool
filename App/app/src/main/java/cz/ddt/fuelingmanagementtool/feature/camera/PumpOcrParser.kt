@@ -17,13 +17,17 @@ class PumpOcrParser {
             Regex("""\bMIN\.?\s*ODB[EĚ]R\b.*""", RegexOption.IGNORE_CASE)
         )
 
+        private val CURRENCY_LINE_REGEX = Regex(
+            """^(\s*[\dIl]+(?:[.,\s]+[\dIl]+)?\s*)((?:[Kk][čcČC](?:\s*/?\s*[lL])?|[Cc][Zz][Kk])\s*)$"""
+        )
+
         private val PRICE_PER_LITER_REGEX = Regex(
-            """^\s*(\d+(?:[.,\s]\d+)?)\s*(?:K[čc]\s*/?\s*[lL]|K[čc][lL])\s*$""",
+            """^\s*(\d+(?:[.,\s]+\d+)?)\s*(?:K[čcČC]\s*/?\s*[lL]|K[čcČC][lL])\s*$""",
             RegexOption.IGNORE_CASE
         )
 
         private val TOTAL_PRICE_REGEX = Regex(
-            """^\s*(\d+(?:[.,\s]\d+)?)\s*(?:K[čc]|CZK)\s*$""",
+            """^\s*(\d+(?:[.,\s]+\d+)?)\s*(?:K[čcČC]|CZK)\s*$""",
             RegexOption.IGNORE_CASE
         )
 
@@ -46,17 +50,19 @@ class PumpOcrParser {
             val trimmed = line.trim()
             if (trimmed.isEmpty()) continue
 
-            PRICE_PER_LITER_REGEX.matchEntire(trimmed)?.let {
+            val normalizedLine = normalizePriceOcrTypos(trimmed)
+
+            PRICE_PER_LITER_REGEX.matchEntire(normalizedLine)?.let {
                 rawUnitPriceCandidates.add(it.groupValues[1])
                 continue
             }
 
-            TOTAL_PRICE_REGEX.matchEntire(trimmed)?.let {
+            TOTAL_PRICE_REGEX.matchEntire(normalizedLine)?.let {
                 rawTotalCandidates.add(it.groupValues[1])
                 continue
             }
 
-            LITERS_REGEX.matchEntire(trimmed)?.let {
+            LITERS_REGEX.matchEntire(normalizedLine)?.let {
                 rawLitersCandidates.add(it.groupValues[1])
                 continue
             }
@@ -79,6 +85,14 @@ class PumpOcrParser {
             totalOptions = totalOptions,
             unitPriceOptions = unitPriceOptions
         )
+    }
+
+    private fun normalizePriceOcrTypos(line: String): String {
+        val match = CURRENCY_LINE_REGEX.matchEntire(line) ?: return line
+        val normalizedNumber = match.groupValues[1]
+            .replace('I', '1')
+            .replace('l', '1')
+        return "$normalizedNumber${match.groupValues[2]}"
     }
 
     private fun filterNoiseLines(lines: List<String>): List<String> {

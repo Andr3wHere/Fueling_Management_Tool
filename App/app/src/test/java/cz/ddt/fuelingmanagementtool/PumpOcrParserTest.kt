@@ -73,4 +73,44 @@ class PumpOcrParserTest {
         assertNull(result.totalPrice)
         assertNull(result.pricePerLiter)
     }
+
+    @Test
+    fun `parse emulator OCR confusion where I replaces 1 before Kc`() {
+        val raw = "MMQ\n5L\n2136 IKč\nTATSUNO\n4527L\n4720 KčL"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.1, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.20, result.pricePerLiter!!, 0.001)
+    }
+
+    @Test
+    fun `parse OCR confusion where lowercase l replaces 1 before Kc`() {
+        val raw = "2136 lKč\n4527L\n4720 KčL"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.1, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.20, result.pricePerLiter!!, 0.001)
+    }
+
+    @Test
+    fun `parse OCR confusion with tight I before Kc without space`() {
+        val raw = "2136IKč\n4527L\n4720 KčL"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.1, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.20, result.pricePerLiter!!, 0.001)
+    }
+
+    @Test
+    fun `parse explicit decimal with I before Kc while preserving lowercase l units`() {
+        val raw = "2136.I Kč\n45.27 l\n47.20 Kč/l"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.1, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.20, result.pricePerLiter!!, 0.001)
+    }
 }
