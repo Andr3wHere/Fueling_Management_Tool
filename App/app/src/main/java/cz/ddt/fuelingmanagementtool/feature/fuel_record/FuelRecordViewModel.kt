@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cz.ddt.fuelingmanagementtool.data.local.dao.FuelRecordDao
 import cz.ddt.fuelingmanagementtool.data.local.entity.FuelRecordEntity
+import cz.ddt.fuelingmanagementtool.data.repository.FuelRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,9 +18,11 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import javax.inject.Inject
 
+
 @HiltViewModel
 class FuelRecordViewModel @Inject constructor(
-    private val fuelRecordDao: FuelRecordDao
+    private val fuelRecordDao: FuelRecordDao,
+    private val fuelRecordRepository: FuelRecordRepository
 ) : ViewModel() {
 
     val records = fuelRecordDao.getAllRecords()
@@ -38,12 +41,16 @@ class FuelRecordViewModel @Inject constructor(
     private val _saveSuccessful = MutableStateFlow(false)
     val saveSuccessful = _saveSuccessful.asStateFlow()
 
+    suspend fun getRecordById(id: Long): FuelRecordEntity? {
+        return fuelRecordRepository.getRecordById(id)
+    }
     fun saveRecord(
         date: String,
         liters: String,
         price: String,
         unitPrice: String,
-        vehicleId: Long
+        vehicleId: Long,
+        originalRecord: FuelRecordEntity? = null
     ) {
         if (_isSaving.value) return
 
@@ -66,12 +73,12 @@ class FuelRecordViewModel @Inject constructor(
             return
         }
 
-        if (totalPrice == null || totalPrice < 0L) {
+        if (totalPrice == null || totalPrice <= 0L) {
             _saveError.value = "Zadej platnou celkovou cenu."
             return
         }
 
-        if (unitPriceValue == null || unitPriceValue < 0L) {
+        if (unitPriceValue == null || unitPriceValue <= 0L) {
             _saveError.value = "Zadej platnou jednotkovou cenu."
             return
         }
@@ -80,16 +87,29 @@ class FuelRecordViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                fuelRecordDao.insertRecord(
-                    FuelRecordEntity(
+                if (originalRecord == null) {
+                    fuelRecordDao.insertRecord(
+                        FuelRecordEntity(
+                            date = parsedDate,
+                            volumeCentilitres = volume,
+                            totalPriceHalers = totalPrice,
+                            unitPriceHalersPerLitre = unitPriceValue,
+                            vehicleId = vehicleId
+                        )
+                    )
+                } else {
+                    val updatedRecord = originalRecord.copy(
                         date = parsedDate,
                         volumeCentilitres = volume,
                         totalPriceHalers = totalPrice,
-                        unitPriceHalersPerLitre = unitPriceValue,
-                        vehicleId = vehicleId
+                        unitPriceHalersPerLitre = unitPriceValue
                     )
-                )
 
+                    if (fuelRecordRepository.updateRecord(updatedRecord) == 0) {
+                        _saveError.value = "Tankování už neexistuje."
+                        return@launch
+                    }
+                }
                 _saveSuccessful.value = true
             } catch (e: CancellationException) {
                 throw e

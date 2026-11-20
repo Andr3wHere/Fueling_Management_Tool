@@ -23,11 +23,18 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.format.DateTimeFormatter
 
+import androidx.compose.material3.Text
+import androidx.compose.runtime.produceState
+import cz.ddt.fuelingmanagementtool.data.local.entity.FuelRecordEntity
+import kotlinx.coroutines.CancellationException
+
 sealed class Screen(val route: String) {
     data object VehicleList : Screen("vehicle_list")
     data object AddVehicle : Screen("add_vehicle")
     data object FuelRecordList : Screen("fuel_record_list/{vehicleId}")
     data object EditFuelRecord : Screen("edit_fuel_record/{vehicleId}")
+
+    data object EditSavedFuelRecord : Screen("edit_saved_fuel_record/{recordId}")
 }
 
 @Composable
@@ -143,7 +150,68 @@ fun AppNavigation() {
             )
         }
 
-        // 4. Historie tankování
+        // 4. Úprava uloženého tankování
+        composable(Screen.EditSavedFuelRecord.route) { backStackEntry ->
+            val recordId = backStackEntry.arguments?.getString("recordId")?.toLongOrNull()
+            if (recordId == null) {
+                Text("Neplatné ID tankování.")
+                return@composable
+            }
+
+            val editViewModel: FuelRecordViewModel = hiltViewModel(backStackEntry)
+            val loadResult by produceState<Result<FuelRecordEntity?>?>(null, recordId) {
+                value = try {
+                    Result.success(editViewModel.getRecordById(recordId))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+
+            val result = loadResult
+            val record = result?.getOrNull()
+            val vehicleId = record?.vehicleId
+
+            when {
+                result == null -> Text("Načítám tankování…")
+                result.isFailure -> Text("Tankování se nepodařilo načíst.")
+                record == null -> Text("Tankování už neexistuje.")
+                vehicleId == null -> Text("Tankování nemá přiřazené vozidlo.")
+                else -> {
+                    val saving by editViewModel.isSaving.collectAsState()
+                    val error by editViewModel.saveError.collectAsState()
+                    val saved by editViewModel.saveSuccessful.collectAsState()
+
+                    LaunchedEffect(saved) {
+                        if (saved) navController.popBackStack()
+                    }
+
+                    EditFuelRecordScreen(
+                        vehicleName = vehicles.find { it.id == vehicleId }?.name ?: "Vozidlo",
+                        initialDate = record.date.format(dateFormatter),
+                        initialLiters = formatRecordInput(record.volumeCentilitres),
+                        initialPrice = formatRecordInput(record.totalPriceHalers),
+                        initialUnitPrice = formatRecordInput(record.unitPriceHalersPerLitre),
+                        isSaving = saving,
+                        saveError = error,
+                        onBack = { navController.popBackStack() },
+                        onSave = { date, liters, price, unitPrice ->
+                            editViewModel.saveRecord(
+                                date = date,
+                                liters = liters,
+                                price = price,
+                                unitPrice = unitPrice,
+                                vehicleId = vehicleId,
+                                originalRecord = record
+                            )
+                        }
+                    )
+                }
+            }
+        }
+
+        // 5. Historie tankování
         composable(Screen.FuelRecordList.route) { backStackEntry ->
             val vehicleId = backStackEntry.arguments?.getString("vehicleId")?.toLongOrNull()
             FuelRecordListScreen(
@@ -159,6 +227,11 @@ fun AppNavigation() {
                             "edit_fuel_record/$vehicleId"
                         )
                     }
+                },
+                onRecordClick = { recordId ->
+                    val route = Screen.EditSavedFuelRecord.route
+                        .replace("{recordId}", recordId.toString())
+                    navController.navigate(route)
                 },
                 onDeleteRecord = { recordId ->
                     savedRecords.find { record ->
@@ -186,4 +259,8 @@ private fun formatStoredValue(
         .replace('.', ',')
 
     return "$formatted $unit"
+}
+
+private fun formatRecordInput(value: Long): String {
+    return BigDecimal.valueOf(value, 2).toPlainString().replace('.', ',')
 }
