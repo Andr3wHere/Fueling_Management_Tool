@@ -25,12 +25,17 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.format.DateTimeFormatter
 
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import java.util.Locale
+
 sealed class Screen(val route: String) {
     data object VehicleList : Screen("vehicle_list")
     data object AddVehicle : Screen("add_vehicle")
     data object FuelRecordList : Screen("fuel_record_list/{vehicleId}")
-    data object EditFuelRecord : Screen("edit_fuel_record/{vehicleId}")
-
+    data object EditFuelRecord : Screen(
+        "edit_fuel_record/{vehicleId}?liters={liters}&price={price}&unitPrice={unitPrice}&fromCamera={fromCamera}"
+    )
     data object Camera : Screen("camera/{vehicleId}")
 }
 
@@ -79,7 +84,18 @@ fun AppNavigation() {
             CameraViewfinderScreen(
                 onTextRecognized = { text, _ ->
                     val result = PumpOcrParser().parse(text)
-                    // TODO (krok 4): poslat result do formuláře
+
+                    if (vehicleId != null) {
+                        navController.navigate(
+                            "edit_fuel_record/$vehicleId" +
+                                    "?liters=${result.liters.toFormValue()}" +
+                                    "&price=${result.totalPrice.toFormValue()}" +
+                                    "&unitPrice=${result.pricePerLiter.toFormValue()}" +
+                                    "&fromCamera=true"
+                        ) {
+                            popUpTo(Screen.Camera.route) { inclusive = true }
+                        }
+                    }
                 },
                 onNavigateBack = {
                     navController.popBackStack()
@@ -127,10 +143,52 @@ fun AppNavigation() {
         }
 
         // 3. Nové tankování
-        composable(Screen.EditFuelRecord.route) { backStackEntry ->
+        composable(
+            route = Screen.EditFuelRecord.route,
+            arguments = listOf(
+                navArgument("vehicleId") { type = NavType.StringType },
+                navArgument("liters") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("price") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("unitPrice") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("fromCamera") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
             val vehicleId = backStackEntry.arguments
                 ?.getString("vehicleId")
                 ?.toLongOrNull()
+
+            val ocrLiters = backStackEntry.arguments?.getString("liters").orEmpty()
+            val ocrPrice = backStackEntry.arguments?.getString("price").orEmpty()
+            val ocrUnitPrice = backStackEntry.arguments?.getString("unitPrice").orEmpty()
+            val fromCamera = backStackEntry.arguments?.getBoolean("fromCamera") ?: false
+
+            val missing = buildList {
+                if (ocrLiters.isBlank()) add("množství paliva")
+                if (ocrPrice.isBlank()) add("celková cena")
+                if (ocrUnitPrice.isBlank()) add("cena za litr")
+            }
+
+            val ocrWarning =
+                if (fromCamera && missing.isNotEmpty()) {
+                    "Nepodařilo se rozpoznat: ${missing.joinToString()}. Doplň prosím ručně."
+                } else {
+                    null
+                }
 
             LaunchedEffect(Unit) {
                 fuelRecordViewModel.clearSaveStatus()
@@ -144,6 +202,10 @@ fun AppNavigation() {
             }
 
             EditFuelRecordScreen(
+                initialLiters = ocrLiters,
+                initialPrice = ocrPrice,
+                initialUnitPrice = ocrUnitPrice,
+                ocrWarning = ocrWarning,
                 onSave = { date, liters, price, unitPrice ->
                     if (vehicleId != null) {
                         fuelRecordViewModel.saveRecord(
@@ -210,3 +272,8 @@ private fun formatStoredValue(
 
     return "$formatted $unit"
 }
+
+private fun Double?.toFormValue(): String =
+    this?.let {
+        String.format(Locale.US, "%.2f", it).replace('.', ',')
+    } ?: ""
