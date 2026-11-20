@@ -14,4 +14,8 @@ class FuelRecordRepository @Inject constructor(
     suspend fun updateRecord(record: FuelRecordEntity): Int {
         return fuelRecordDao.updateRecord(record)
     }
+
+    suspend fun deleteRecord(record: FuelRecordEntity) {
+        fuelRecordDao.deleteRecord(record)
+    }
 }

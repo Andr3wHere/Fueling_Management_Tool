@@ -54,8 +54,12 @@ fun EditFuelRecordScreen(
     recordTime: String = "16:01",
     gpsLocation: String = "ORLEN Benzina",
     isSaving: Boolean = false,
-    saveError: String? = null
+    isDeleting: Boolean = false,
+    saveError: String? = null,
+    onDelete: (() -> Unit)? = null
 ) {
+    val isBusy = isSaving || isDeleting
+
     var date by remember(initialDate) {
         mutableStateOf(initialDate)
     }
@@ -99,6 +103,8 @@ fun EditFuelRecordScreen(
     var submitted by remember {
         mutableStateOf(false)
     }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val formatter = remember {
         DateTimeFormatter.ofPattern("dd.MM.uuuu")
@@ -231,7 +237,7 @@ fun EditFuelRecordScreen(
                             keyboardType = KeyboardType.Decimal
                         ),
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validLiters,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -264,7 +270,7 @@ fun EditFuelRecordScreen(
                             keyboardType = KeyboardType.Decimal
                         ),
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validPrice,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -297,7 +303,7 @@ fun EditFuelRecordScreen(
                             keyboardType = KeyboardType.Decimal
                         ),
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validUnitPrice,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -319,7 +325,7 @@ fun EditFuelRecordScreen(
                             onCheckedChange = {
                                 fullTank = it
                             },
-                            enabled = !isSaving
+                            enabled = !isBusy
                         )
 
                         Text(
@@ -361,7 +367,7 @@ fun EditFuelRecordScreen(
                             Text("dd.MM.rrrr")
                         },
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validDate,
                         supportingText = {
                             if (submitted && !validDate) {
@@ -405,7 +411,7 @@ fun EditFuelRecordScreen(
                         )
                     }
                 },
-                enabled = !isSaving,
+                enabled = !isBusy,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
@@ -422,7 +428,7 @@ fun EditFuelRecordScreen(
 
             OutlinedButton(
                 onClick = onRetakePhoto,
-                enabled = !isSaving,
+                enabled = !isBusy,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Vyfotit znovu")
@@ -430,10 +436,33 @@ fun EditFuelRecordScreen(
 
             TextButton(
                 onClick = onDiscard,
-                enabled = !isSaving,
+                enabled = !isBusy,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Zahodit záznam")
+            }
+            onDelete?.let { deleteRecord ->
+                TextButton(
+                    onClick = { showDeleteDialog = true },
+                    enabled = !isBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Smazat uložené tankování")
+                }
+
+                if (showDeleteDialog) {
+                    DeleteFuelRecordDialog(
+                        date = initialDate,
+                        onConfirm = {
+                            showDeleteDialog = false
+                            deleteRecord()
+                        },
+                        onDismiss = { showDeleteDialog = false }
+                    )
+                }
             }
         }
     }
