@@ -16,48 +16,33 @@ class OcrTextRecognizer {
 
     suspend fun recognizeFromBitmap(bitmap: Bitmap): String =
         suspendCancellableCoroutine { continuation ->
-            recognizeFromBitmap(
-                bitmap = bitmap,
-                onSuccess = { text ->
-                    if (continuation.isActive) {
-                        continuation.resume(text)
+            try {
+                val image = InputImage.fromBitmap(bitmap, 0)
+                recognizer.process(image)
+                    .addOnSuccessListener { visionText ->
+                        if (continuation.isActive) {
+                            continuation.resume(visionText.text)
+                        }
                     }
-                },
-                onFailure = { e ->
-                    if (continuation.isActive) {
-                        continuation.resumeWithException(e)
+                    .addOnFailureListener { e ->
+                        if (continuation.isActive) {
+                            continuation.resumeWithException(e)
+                        }
                     }
-                }
-            )
-        }
-
-    // Kept temporarily while CameraViewfinderScreen still uses callbacks; remove once migrated to FuelStandImageProcessor.
-    fun recognizeFromBitmap(
-        bitmap: Bitmap,
-        onSuccess: (String) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        try {
-            val image = InputImage.fromBitmap(bitmap, 0)
-            recognizer.process(image)
-                .addOnSuccessListener { visionText ->
-                    onSuccess(visionText.text)
-                }
-                .addOnFailureListener { e ->
-                    onFailure(e)
-                }
-                .addOnCompleteListener {
-                    if (!bitmap.isRecycled) {
-                        bitmap.recycle()
+                    .addOnCompleteListener {
+                        if (!bitmap.isRecycled) {
+                            bitmap.recycle()
+                        }
                     }
+            } catch (e: Exception) {
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
                 }
-        } catch (e: Exception) {
-            if (!bitmap.isRecycled) {
-                bitmap.recycle()
+                if (continuation.isActive) {
+                    continuation.resumeWithException(e)
+                }
             }
-            onFailure(e)
         }
-    }
 
     fun close() {
         if (recognizerLazy.isInitialized()) {

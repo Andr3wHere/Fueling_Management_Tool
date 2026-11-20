@@ -45,20 +45,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cz.ddt.fuelingmanagementtool.ui.icons.AppIcons
 import cz.ddt.fuelingmanagementtool.ui.theme.FuelDarkPrimary
 import java.util.concurrent.Executors
-import android.graphics.Bitmap
-import android.util.Log
-
-private const val TAG = "CameraCrop"
 
 @Composable
 fun CameraViewfinderScreen(
-    onTextRecognized: (String, Bitmap?) -> Unit,
+    onOcrResult: (OcrFuelResult) -> Unit,
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: CameraViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var hasCameraPermission by remember {
@@ -83,8 +81,9 @@ fun CameraViewfinderScreen(
 
     if (hasCameraPermission) {
         CameraViewfinderContent(
-            onTextRecognized = onTextRecognized,
+            onOcrResult = onOcrResult,
             onNavigateBack = onNavigateBack,
+            viewModel = viewModel,
             modifier = modifier
         )
     } else {
@@ -98,8 +97,9 @@ fun CameraViewfinderScreen(
 
 @Composable
 private fun CameraViewfinderContent(
-    onTextRecognized: (String, Bitmap?) -> Unit,
+    onOcrResult: (OcrFuelResult) -> Unit,
     onNavigateBack: () -> Unit,
+    viewModel: CameraViewModel,
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -110,20 +110,19 @@ private fun CameraViewfinderContent(
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
     }
-    val textRecognizer = remember { OcrTextRecognizer() }
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
     var camera by remember { mutableStateOf<Camera?>(null) }
     var isTorchOn by remember { mutableStateOf(false) }
     var previewSize by remember { mutableStateOf(IntSize.Zero) }
     var reticleRect by remember { mutableStateOf(Rect.Zero) }
-    var isProcessing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val isProcessing by viewModel.isProcessing.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val currentOnOcrResult by rememberUpdatedState(onOcrResult)
 
     DisposableEffect(Unit) {
         onDispose {
             cameraExecutor.shutdown()
-            textRecognizer.close()
         }
     }
 
@@ -169,7 +168,7 @@ private fun CameraViewfinderContent(
                             imageCapture
                         )
                     } catch (e: Exception) {
-                        errorMessage = "Chyba inicializace kamery: ${e.localizedMessage}"
+                        viewModel.onError("Chyba inicializace kamery: ${e.localizedMessage}")
                     }
                 }, ContextCompat.getMainExecutor(ctx))
 
@@ -297,58 +296,26 @@ private fun CameraViewfinderContent(
                     .clip(CircleShape)
                     .border(width = 4.dp, color = Color.White, shape = CircleShape)
                     .clickable(enabled = !isProcessing) {
-                        isProcessing = true
-                        errorMessage = null
+                        viewModel.onCaptureStarted()
 
                         imageCapture.takePicture(
                             cameraExecutor,
                             object : ImageCapture.OnImageCapturedCallback() {
                                 override fun onCaptureSuccess(imageProxy: ImageProxy) {
-                                    var previewCopy: Bitmap? = null
-                                    try {
-                                        val fullSensorSize = "${imageProxy.width}x${imageProxy.height}"
-
-                                        val croppedBitmap = imageProxy.use { proxy ->
-                                            ImageCropper().cropToRect(
-                                                imageProxy = proxy,
-                                                rect = reticleRect,
-                                                previewViewSize = previewSize
-                                            )
+                                    viewModel.processCapturedImage(
+                                        imageProxy = imageProxy,
+                                        reticleRect = reticleRect,
+                                        previewViewSize = previewSize,
+                                        onResult = { result ->
+                                            currentOnOcrResult(result)
                                         }
-                                        Log.d(TAG, "ImageProxy closed safely")
-
-                                        val uiRatio = reticleRect.width / reticleRect.height
-                                        val bmpRatio = croppedBitmap.width.toFloat() / croppedBitmap.height
-                                        Log.d(TAG, "Full sensor frame: $fullSensorSize")
-                                        Log.d(TAG, "UI Reticle: ${reticleRect.width.toInt()}x${reticleRect.height.toInt()} (ratio=${"%.3f".format(uiRatio)})")
-                                        Log.d(TAG, "Cropped Bitmap: ${croppedBitmap.width}x${croppedBitmap.height} (ratio=${"%.3f".format(bmpRatio)})")
-
-                                        // Copy before OcrTextRecognizer recycles croppedBitmap
-                                        previewCopy = croppedBitmap.copy(Bitmap.Config.ARGB_8888, false)
-
-                                        textRecognizer.recognizeFromBitmap(
-                                            bitmap = croppedBitmap,
-                                            onSuccess = { recognizedText ->
-                                                isProcessing = false
-                                                onTextRecognized(recognizedText, previewCopy)
-                                            },
-                                            onFailure = { exception ->
-                                                previewCopy?.recycle()
-                                                isProcessing = false
-                                                errorMessage = "Rozpoznávání selhalo: ${exception.localizedMessage}"
-                                            }
-                                        )
-                                    } catch (e: Exception) {
-                                        previewCopy?.recycle()
-                                        isProcessing = false
-                                        errorMessage = "Chyba zpracování snímku: ${e.localizedMessage}"
-                                    }
+                                    )
                                 }
 
                                 override fun onError(exception: ImageCaptureException) {
-                                    isProcessing = false
-                                    errorMessage =
+                                    viewModel.onError(
                                         "Pořízení snímku selhalo: ${exception.localizedMessage}"
+                                    )
                                 }
                             }
                         )
