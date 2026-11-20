@@ -113,4 +113,44 @@ class PumpOcrParserTest {
         assertEquals(45.27, result.liters!!, 0.001)
         assertEquals(47.20, result.pricePerLiter!!, 0.001)
     }
+
+    @Test
+    fun `parse emulator Logcat output with thousands space and KcIL slash misread`() {
+        val raw = "2 136 Kč\n4527L\n420 KčIL"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.0, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(42.0, result.pricePerLiter!!, 0.001)
+    }
+
+    @Test
+    fun `parse thousands space with decimal point and KcIL`() {
+        val raw = "2 136.1 Kč\n45.27 L\n4720 KčIL"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.1, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.20, result.pricePerLiter!!, 0.001)
+    }
+
+    @Test
+    fun `parse thousands space with I before Kc and Kc per 1 misread`() {
+        val raw = "2 136 IKč\n4527L\n47.20 Kč/1"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.1, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.20, result.pricePerLiter!!, 0.001)
+    }
+
+    @Test
+    fun `calculate missing pricePerLiter when only totalPrice and liters are read`() {
+        val raw = "2 136 Kč\n4527L"
+        val result = parser.parse(raw)
+
+        assertEquals(2136.0, result.totalPrice!!, 0.001)
+        assertEquals(45.27, result.liters!!, 0.001)
+        assertEquals(47.18, result.pricePerLiter!!, 0.01)
+    }
 }

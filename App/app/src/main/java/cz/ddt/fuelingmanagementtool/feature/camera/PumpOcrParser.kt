@@ -18,21 +18,21 @@ class PumpOcrParser {
         )
 
         private val CURRENCY_LINE_REGEX = Regex(
-            """^(\s*[\dIl]+(?:[.,\s]+[\dIl]+)?\s*)((?:[Kk][čcČC](?:\s*/?\s*[lL])?|[Cc][Zz][Kk])\s*)$"""
+            """^(\s*[\dIl]+(?:[.,\s]+[\dIl]+)*\s*)((?:[Kk][čcČC](?:\s*(?:[/|\\1Il]\s*[lL]|[/|\\]\s*[1Il]|[lL]))?|[Cc][Zz][Kk])\s*)$"""
         )
 
         private val PRICE_PER_LITER_REGEX = Regex(
-            """^\s*(\d+(?:[.,\s]+\d+)?)\s*(?:K[čcČC]\s*/?\s*[lL]|K[čcČC][lL])\s*$""",
+            """^\s*(\d+(?:[.,\s]+\d+)*)\s*(?:K[čcČC]\s*(?:[/|\\1Il]\s*[lL]|[/|\\]\s*[1Il]|[lL]))\s*$""",
             RegexOption.IGNORE_CASE
         )
 
         private val TOTAL_PRICE_REGEX = Regex(
-            """^\s*(\d+(?:[.,\s]+\d+)?)\s*(?:K[čcČC]|CZK)\s*$""",
+            """^\s*(\d+(?:[.,\s]+\d+)*)\s*(?:K[čcČC]|CZK)\s*$""",
             RegexOption.IGNORE_CASE
         )
 
         private val LITERS_REGEX = Regex(
-            """^\s*(\d+(?:[.,\s]\d+)?)\s*[lL]\s*$""",
+            """^\s*(\d+(?:[.,\s]+\d+)*)\s*[lL]\s*$""",
             RegexOption.IGNORE_CASE
         )
     }
@@ -126,13 +126,16 @@ class PumpOcrParser {
     }
 
     private fun generateUnitPriceCandidates(raw: String): List<Double> {
-        val normalized = normalizeExplicitSeparator(raw)
-        if (normalized != null) {
-            return listOfNotNull(normalized.takeIf { it in 15.0..99.9 })
+        val explicit = parseExplicitDecimal(raw)
+        if (raw.contains('.') || raw.contains(',')) {
+            return listOfNotNull(explicit?.takeIf { it in 15.0..99.9 })
+        }
+        if (explicit != null && explicit in 15.0..99.9) {
+            return listOf(explicit)
         }
 
         val digits = raw.filter { it.isDigit() }
-        val candidates = mutableSetOf<Double>()
+        val candidates = linkedSetOf<Double>()
 
         if (digits.length == 4) {
             candidates.add(digits.toDouble() / 100.0)
@@ -146,15 +149,15 @@ class PumpOcrParser {
     }
 
     private fun generateLitersCandidates(raw: String): List<Double> {
-        val normalized = normalizeExplicitSeparator(raw)
-        if (normalized != null) {
-            return listOf(normalized)
+        val explicit = parseExplicitDecimal(raw)
+        if (explicit != null && explicit in 0.5..500.0) {
+            return listOf(explicit)
         }
 
         val digits = raw.filter { it.isDigit() }
         if (digits.isEmpty()) return emptyList()
 
-        val candidates = mutableSetOf<Double>()
+        val candidates = linkedSetOf<Double>()
         if (digits.length >= 3) {
             candidates.add(digits.toDouble() / 100.0)
         }
@@ -167,15 +170,23 @@ class PumpOcrParser {
     }
 
     private fun generateTotalPriceCandidates(raw: String): List<Double> {
-        val normalized = normalizeExplicitSeparator(raw)
-        if (normalized != null) {
-            return listOf(normalized)
+        val explicit = parseExplicitDecimal(raw)
+        if (explicit != null && explicit in 10.0..50000.0) {
+            return listOf(explicit)
         }
 
-        val digits = raw.filter { it.isDigit() }
+        val trimmed = raw.trim()
+        val digits = trimmed.filter { it.isDigit() }
         if (digits.isEmpty()) return emptyList()
 
-        val candidates = mutableSetOf<Double>()
+        val isThousandsGrouped = !trimmed.contains('.') && !trimmed.contains(',') &&
+            trimmed.any { it.isWhitespace() } &&
+            trimmed.split(Regex("""\s+""")).last().length == 3
+
+        val candidates = linkedSetOf<Double>()
+        if (isThousandsGrouped) {
+            candidates.add(digits.toDouble())
+        }
         if (digits.length >= 2) candidates.add(digits.toDouble() / 10.0)
         if (digits.length >= 3) candidates.add(digits.toDouble() / 100.0)
         candidates.add(digits.toDouble())
@@ -183,11 +194,21 @@ class PumpOcrParser {
         return candidates.filter { it in 10.0..50000.0 }
     }
 
-    private fun normalizeExplicitSeparator(raw: String): Double? {
+    private fun parseExplicitDecimal(raw: String): Double? {
         val trimmed = raw.trim()
-        if (trimmed.contains('.') || trimmed.contains(',') || trimmed.contains(' ')) {
-            val replaced = trimmed.replace(Regex("""[.,\s]+"""), ".")
-            return replaced.toDoubleOrNull()
+        if (trimmed.contains('.') || trimmed.contains(',')) {
+            val compact = trimmed
+                .replace(Regex("""\s+"""), "")
+                .replace(',', '.')
+            return compact.toDoubleOrNull()
+        }
+        if (trimmed.any { it.isWhitespace() }) {
+            val parts = trimmed.split(Regex("""\s+"""))
+            if (parts.size >= 2 && parts.last().length in 1..2) {
+                val integerPart = parts.dropLast(1).joinToString("")
+                val fractionalPart = parts.last()
+                return "$integerPart.$fractionalPart".toDoubleOrNull()
+            }
         }
         return null
     }
@@ -250,6 +271,21 @@ class PumpOcrParser {
             val t = totalOptions.first()
             val u = unitPriceOptions.first()
             return OcrFuelResult(liters = roundToTwoDecimals(t / u), totalPrice = t, pricePerLiter = u)
+        }
+
+        if (litersOptions.isNotEmpty() && totalOptions.isNotEmpty() && unitPriceOptions.isEmpty()) {
+            for (l in litersOptions) {
+                for (t in totalOptions) {
+                    val computedUnit = roundToTwoDecimals(t / l)
+                    if (computedUnit in 15.0..99.9) {
+                        return OcrFuelResult(
+                            liters = l,
+                            totalPrice = t,
+                            pricePerLiter = computedUnit
+                        )
+                    }
+                }
+            }
         }
 
         return OcrFuelResult(
