@@ -9,6 +9,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import cz.ddt.fuelingmanagementtool.feature.camera.CameraViewfinderScreen
+import cz.ddt.fuelingmanagementtool.feature.camera.PumpOcrParser
 
 import cz.ddt.fuelingmanagementtool.feature.vehicle.AddVehicleScreen
 import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleListScreen
@@ -28,6 +30,8 @@ sealed class Screen(val route: String) {
     data object AddVehicle : Screen("add_vehicle")
     data object FuelRecordList : Screen("fuel_record_list/{vehicleId}")
     data object EditFuelRecord : Screen("edit_fuel_record/{vehicleId}")
+
+    data object Camera : Screen("camera/{vehicleId}")
 }
 
 @Composable
@@ -66,6 +70,22 @@ fun AppNavigation() {
         navController = navController,
         startDestination = Screen.VehicleList.route
     ) {
+        // 0. Kamera – vyfocení stojanu
+        composable(Screen.Camera.route) { backStackEntry ->
+            val vehicleId = backStackEntry.arguments
+                ?.getString("vehicleId")
+                ?.toLongOrNull()
+
+            CameraViewfinderScreen(
+                onTextRecognized = { text, _ ->
+                    val result = PumpOcrParser().parse(text)
+                    // TODO (krok 4): poslat result do formuláře
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
         // 1. Seznam vozidel
         composable(Screen.VehicleList.route) {
@@ -153,11 +173,14 @@ fun AppNavigation() {
                                 savedRecord.vehicleId == vehicleId
                     }
                 },
-                onAddRecord = {
+                onTakePhoto = {
                     if (vehicleId != null) {
-                        navController.navigate(
-                            "edit_fuel_record/$vehicleId"
-                        )
+                        navController.navigate("camera/$vehicleId")
+                    }
+                },
+                onManualEntry = {
+                    if (vehicleId != null) {
+                        navController.navigate("edit_fuel_record/$vehicleId")
                     }
                 },
                 onDeleteRecord = { recordId ->

@@ -28,23 +28,50 @@ data class FuelRecordUi(
 @Composable
 fun FuelRecordListScreen(
     records: List<FuelRecordUi> = emptyList(),
-    onAddRecord: () -> Unit = {},
+    onTakePhoto: () -> Unit = {},
+    onManualEntry: () -> Unit = {},
     onDeleteRecord: (Long) -> Unit = {}
 ) {
     var recordToDelete by remember {
         mutableStateOf<FuelRecordUi?>(null)
     }
 
+    var showAddMenu by remember {
+        mutableStateOf(false)
+    }
+
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddRecord,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+            Box {
+                FloatingActionButton(
+                    onClick = { showAddMenu = true },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Text(
+                        text = "+",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showAddMenu,
+                    onDismissRequest = { showAddMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Vyfotit stojan") },
+                        onClick = {
+                            showAddMenu = false
+                            onTakePhoto()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Zadat ručně") },
+                        onClick = {
+                            showAddMenu = false
+                            onManualEntry()
+                        }
+                    )
+                }
             }
         }
     ) { innerPadding ->
