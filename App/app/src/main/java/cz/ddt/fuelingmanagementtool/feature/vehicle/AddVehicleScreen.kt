@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cz.ddt.fuelingmanagementtool.data.local.entity.FuelType
+import androidx.activity.compose.BackHandler
 
 private val FormBackground = Color(0xFFDDE0E8)
 private val FormPurple = Color(0xFF7053B5)
@@ -42,8 +43,13 @@ fun AddVehicleScreen(
         FuelType?,
         Double?
     ) -> Unit,
+    saveStatus: VehicleSaveStatus,
     onNavigateBack: () -> Unit
 ) {
+    val saving = saveStatus == VehicleSaveStatus.SAVING ||
+            saveStatus == VehicleSaveStatus.SAVED
+
+    BackHandler(enabled = saving) {}
     var name by remember { mutableStateOf("") }
     var primaryFuel by remember {
         mutableStateOf(FuelType.PETROL)
@@ -112,7 +118,7 @@ fun AddVehicleScreen(
                     )
                 },
                 navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
+                    TextButton(onClick = onNavigateBack, enabled = !saving) {
                         Text(
                             "‹",
                             color = FormText,
@@ -146,6 +152,9 @@ fun AddVehicleScreen(
 
             OutlinedTextField(
                 value = name,
+                supportingText = {
+                    if (name.isBlank()) Text("Zadej název vozidla.")
+                },
                 onValueChange = { name = it },
                 label = { Text("Název vozidla") },
                 placeholder = { Text("Např. Škoda Octavia") },
@@ -182,6 +191,9 @@ fun AddVehicleScreen(
                     keyboardType = KeyboardType.Decimal
                 ),
                 isError = !validPrimary,
+                supportingText = {
+                    if (!validPrimary) Text("Zadej kladný objem nebo pole nech prázdné.")
+                },
                 shape = RoundedCornerShape(8.dp),
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
@@ -260,6 +272,13 @@ fun AddVehicleScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            if (saveStatus == VehicleSaveStatus.FAILED) {
+                Text(
+                    text = "Vozidlo se nepodařilo uložit. Zkus to znovu.",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Button(
                 onClick = {
                     onSave(
@@ -270,9 +289,7 @@ fun AddVehicleScreen(
                         if (hasSecondaryFuel) secondaryValue else null
                     )
                 },
-                enabled = name.isNotBlank() &&
-                        validPrimary &&
-                        validSecondary,
+                enabled = !saving && name.isNotBlank() && validPrimary && validSecondary,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FormPurple,
@@ -290,6 +307,7 @@ fun AddVehicleScreen(
 
             OutlinedButton(
                 onClick = onNavigateBack,
+                enabled = !saving,
                 shape = RoundedCornerShape(12.dp),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,

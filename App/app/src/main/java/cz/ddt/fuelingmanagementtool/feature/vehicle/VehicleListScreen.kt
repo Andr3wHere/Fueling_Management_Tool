@@ -1,89 +1,103 @@
-
 package cz.ddt.fuelingmanagementtool.feature.vehicle
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import cz.ddt.fuelingmanagementtool.data.local.entity.FuelType
 import cz.ddt.fuelingmanagementtool.data.local.entity.VehicleEntity
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+private val vehicleDateFormatter = DateTimeFormatter.ofPattern("d. M. yyyy")
 
 @Composable
 fun VehicleListScreen(
     vehicles: List<VehicleEntity>,
     onAddVehicle: () -> Unit,
-    onVehicleClick: (Long) -> Unit
+    onVehicleClick: (Long) -> Unit,
+    lastFuelingDates: Map<Long, LocalDate> = emptyMap()
 ) {
+    val colors = MaterialTheme.colorScheme
+
     Scaffold(
+        containerColor = colors.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddVehicle,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                shape = RoundedCornerShape(16.dp),
+                containerColor = colors.primary,
+                contentColor = colors.onPrimary
             ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Přidat vozidlo"
                 )
             }
         }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(52.dp))
 
             Text(
                 text = "Moje vozidla",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(Modifier.height(56.dp))
 
             if (vehicles.isEmpty()) {
-
                 Text(
-                    text = "Zatím nemáš žádné vozidlo.",
+                    text = "Zatím nemáš žádné vozidlo. Přidej ho tlačítkem +.",
                     style = MaterialTheme.typography.bodyMedium
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Klikni na + a přidej své první vozidlo.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
             } else {
-
                 LazyColumn(
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 88.dp)
                 ) {
-
-                    items(
-                        items = vehicles,
-                        key = { it.id }
-                    ) { vehicle ->
-
+                    itemsIndexed(vehicles, key = { _, vehicle -> vehicle.id }) { index, vehicle ->
                         VehicleCard(
                             vehicle = vehicle,
-                            onClick = {
-                                onVehicleClick(vehicle.id)
-                            }
+                            lastFuelingDate = lastFuelingDates[vehicle.id],
+                            outlined = index == 0,
+                            onClick = { onVehicleClick(vehicle.id) }
                         )
                     }
                 }
@@ -95,104 +109,89 @@ fun VehicleListScreen(
 @Composable
 private fun VehicleCard(
     vehicle: VehicleEntity,
+    lastFuelingDate: LocalDate?,
+    outlined: Boolean,
     onClick: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = if (outlined) BorderStroke(1.dp, colors.onSurface) else null
     ) {
-
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
-                Text(
-                    text = "🚗",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = colors.primaryContainer,
+                    contentColor = colors.primary
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.DirectionsCar,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-
                     Text(
                         text = vehicle.name,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
-
                     Text(
-                        text = fuelTypeLabel(
-                            vehicle.primaryFuelType.name
-                        ),
+                        text = listOfNotNull(
+                            vehicle.primaryFuelType,
+                            vehicle.secondaryFuelType
+                        ).joinToString(" • ") { fuelTypeLabel(it) },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
-                Text(
-                    text = "›",
-                    style = MaterialTheme.typography.headlineMedium
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
-            if (vehicle.primaryTankCapacity != null) {
+            HorizontalDivider(color = colors.outlineVariant)
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                HorizontalDivider()
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "Kapacita nádrže: ${vehicle.primaryTankCapacity} l",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            if (vehicle.secondaryFuelType != null) {
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Druhé palivo: ${
-                        fuelTypeLabel(
-                            vehicle.secondaryFuelType.name
-                        )
-                    }",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                vehicle.secondaryTankCapacity?.let { capacity ->
-                    Text(
-                        text = "Kapacita druhé nádrže: $capacity l",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+            Text(
+                text = "Datum: ${lastFuelingDate?.format(vehicleDateFormatter) ?: "—"}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Celkem ujeté km: —",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Průměrná spotřeba: —",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
 
-private fun fuelTypeLabel(type: String): String {
-    return when (type) {
-        "PETROL" -> "Benzín"
-        "DIESEL" -> "Nafta"
-        "LPG" -> "LPG"
-        "CNG" -> "CNG"
-        else -> type
-    }
+private fun fuelTypeLabel(type: FuelType): String = when (type) {
+    FuelType.PETROL -> "Benzín"
+    FuelType.DIESEL -> "Nafta"
+    FuelType.LPG -> "LPG"
+    FuelType.CNG -> "CNG"
 }
