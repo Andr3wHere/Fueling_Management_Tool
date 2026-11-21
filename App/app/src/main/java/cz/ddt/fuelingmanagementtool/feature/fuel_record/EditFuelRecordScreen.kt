@@ -55,8 +55,12 @@ fun EditFuelRecordScreen(
     gpsLocation: String = "ORLEN Benzina",
     isSaving: Boolean = false,
     saveError: String? = null,
-    ocrWarning: String? = null
+    ocrWarning: String? = null,
+    isDeleting: Boolean = false,
+    onDelete: (() -> Unit)? = null
 ) {
+    val isBusy = isSaving || isDeleting
+
     var date by remember(initialDate) {
         mutableStateOf(initialDate)
     }
@@ -101,6 +105,8 @@ fun EditFuelRecordScreen(
         mutableStateOf(false)
     }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     val formatter = remember {
         DateTimeFormatter.ofPattern("dd.MM.uuuu")
             .withResolverStyle(ResolverStyle.STRICT)
@@ -139,6 +145,18 @@ fun EditFuelRecordScreen(
             formatDecimal(
                 total.divide(amount, 2, RoundingMode.HALF_UP)
             )
+        } else {
+            ""
+        }
+    }
+
+    fun updateTotalPrice(unit: BigDecimal?) {
+        val amount = parseDecimal(liters)
+        price = if (
+            amount != null && unit != null &&
+            amount > BigDecimal.ZERO && unit > BigDecimal.ZERO
+        ) {
+            formatDecimal(amount.multiply(unit))
         } else {
             ""
         }
@@ -221,7 +239,12 @@ fun EditFuelRecordScreen(
                         value = liters,
                         onValueChange = {
                             liters = it
-                            updateUnitPrice()
+                            val unit = parseDecimal(unitPrice)
+                            if (unit != null && unit > BigDecimal.ZERO) {
+                                updateTotalPrice(unit)
+                            } else {
+                                updateUnitPrice()
+                            }
                         },
                         placeholder = {
                             Text("Např. 42,5")
@@ -231,7 +254,7 @@ fun EditFuelRecordScreen(
                             keyboardType = KeyboardType.Decimal
                         ),
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validLiters,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -264,7 +287,7 @@ fun EditFuelRecordScreen(
                             keyboardType = KeyboardType.Decimal
                         ),
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validPrice,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -287,22 +310,7 @@ fun EditFuelRecordScreen(
                         value = unitPrice,
                         onValueChange = {
                             unitPrice = it
-
-                            val amount = parseDecimal(liters)
-                            val unit = parseDecimal(it)
-
-                            if (
-                                amount != null &&
-                                unit != null &&
-                                amount > BigDecimal.ZERO &&
-                                unit > BigDecimal.ZERO
-                            ) {
-                                price = formatDecimal(
-                                    amount.multiply(unit)
-                                )
-                            } else {
-                                price = ""
-                            }
+                            updateTotalPrice(parseDecimal(it))
                         },
                         placeholder = {
                             Text("Např. 35,90")
@@ -312,7 +320,7 @@ fun EditFuelRecordScreen(
                             keyboardType = KeyboardType.Decimal
                         ),
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validUnitPrice,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -334,7 +342,7 @@ fun EditFuelRecordScreen(
                             onCheckedChange = {
                                 fullTank = it
                             },
-                            enabled = !isSaving
+                            enabled = !isBusy
                         )
 
                         Text(
@@ -376,7 +384,7 @@ fun EditFuelRecordScreen(
                             Text("dd.MM.rrrr")
                         },
                         singleLine = true,
-                        enabled = !isSaving,
+                        enabled = !isBusy,
                         isError = submitted && !validDate,
                         supportingText = {
                             if (submitted && !validDate) {
@@ -420,7 +428,7 @@ fun EditFuelRecordScreen(
                         )
                     }
                 },
-                enabled = !isSaving,
+                enabled = !isBusy,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
@@ -437,7 +445,7 @@ fun EditFuelRecordScreen(
 
             OutlinedButton(
                 onClick = onRetakePhoto,
-                enabled = !isSaving,
+                enabled = !isBusy,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Vyfotit znovu")
@@ -445,10 +453,33 @@ fun EditFuelRecordScreen(
 
             TextButton(
                 onClick = onDiscard,
-                enabled = !isSaving,
+                enabled = !isBusy,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Zahodit záznam")
+            }
+            onDelete?.let { deleteRecord ->
+                TextButton(
+                    onClick = { showDeleteDialog = true },
+                    enabled = !isBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Smazat uložené tankování")
+                }
+
+                if (showDeleteDialog) {
+                    DeleteFuelRecordDialog(
+                        date = initialDate,
+                        onConfirm = {
+                            showDeleteDialog = false
+                            deleteRecord()
+                        },
+                        onDismiss = { showDeleteDialog = false }
+                    )
+                }
             }
         }
     }

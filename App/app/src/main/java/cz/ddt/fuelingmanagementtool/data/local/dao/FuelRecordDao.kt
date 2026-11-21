@@ -6,10 +6,16 @@ import androidx.room.Insert
 import androidx.room.Query
 import cz.ddt.fuelingmanagementtool.data.local.entity.FuelRecordEntity
 import kotlinx.coroutines.flow.Flow
+import androidx.room.Update
 
 @Dao
 interface FuelRecordDao {
 
+    @Query("SELECT * FROM fuel_records WHERE id = :id")
+    suspend fun getRecordById(id: Long): FuelRecordEntity?
+
+    @Update
+    suspend fun updateRecord(record: FuelRecordEntity): Int
     @Insert
     suspend fun insertRecord(record: FuelRecordEntity): Long
 

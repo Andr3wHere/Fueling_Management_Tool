@@ -30,7 +30,9 @@ fun FuelRecordListScreen(
     records: List<FuelRecordUi> = emptyList(),
     onTakePhoto: () -> Unit = {},
     onManualEntry: () -> Unit = {},
-    onDeleteRecord: (Long) -> Unit = {}
+    onDeleteRecord: (Long) -> Unit = {},
+    onRecordClick: (Long) -> Unit = {}
+
 ) {
     var recordToDelete by remember {
         mutableStateOf<FuelRecordUi?>(null)
@@ -115,9 +117,8 @@ fun FuelRecordListScreen(
                     ) { record ->
                         FuelRecordCard(
                             record = record,
-                            onDelete = {
-                                recordToDelete = record
-                            }
+                            onClick = { onRecordClick(record.id) },
+                            onDelete = { recordToDelete = record }
                         )
                     }
                 }
@@ -126,37 +127,13 @@ fun FuelRecordListScreen(
     }
 
     recordToDelete?.let { record ->
-        AlertDialog(
-            onDismissRequest = {
+        DeleteFuelRecordDialog(
+            date = record.date,
+            onConfirm = {
+                onDeleteRecord(record.id)
                 recordToDelete = null
             },
-            title = {
-                Text("Smazat tankování?")
-            },
-            text = {
-                Text(
-                    "Opravdu chceš odstranit tankování ze dne ${record.date}? Tuto akci nelze vrátit zpět."
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDeleteRecord(record.id)
-                        recordToDelete = null
-                    }
-                ) {
-                    Text("Smazat")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        recordToDelete = null
-                    }
-                ) {
-                    Text("Zrušit")
-                }
-            }
+            onDismiss = { recordToDelete = null }
         )
     }
 }
@@ -164,9 +141,11 @@ fun FuelRecordListScreen(
 @Composable
 private fun FuelRecordCard(
     record: FuelRecordUi,
+    onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
