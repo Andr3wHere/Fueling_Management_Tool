@@ -164,15 +164,6 @@ fun EditFuelRecordScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.background
-            ) {
-                TextButton(onClick = onBack) {
-                    Text("← Kontrola tankování")
-                }
-            }
-        }
     ) { innerPadding ->
 
         Column(
@@ -181,13 +172,12 @@ fun EditFuelRecordScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
+                    horizontal = 16.dp
                 ),
             verticalArrangement =
                 Arrangement.spacedBy(14.dp)
         ) {
-
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Kontrola záznamu",
                 style = MaterialTheme.typography.headlineMedium,
