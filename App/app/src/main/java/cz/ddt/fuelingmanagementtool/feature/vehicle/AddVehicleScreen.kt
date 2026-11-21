@@ -1,7 +1,6 @@
 
 package cz.ddt.fuelingmanagementtool.feature.vehicle
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,17 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cz.ddt.fuelingmanagementtool.data.local.entity.FuelType
+import androidx.activity.compose.BackHandler
 
-private val FormBackground = Color(0xFFDDE0E8)
-private val FormPurple = Color(0xFF7053B5)
-private val FormWhite = Color.White
-private val FormText = Color(0xFF20202A)
-private val FormBorder = Color(0xFFAAA6B8)
 
 private fun fuelLabel(type: FuelType): String =
     when (type) {
@@ -42,8 +36,13 @@ fun AddVehicleScreen(
         FuelType?,
         Double?
     ) -> Unit,
+    saveStatus: VehicleSaveStatus,
     onNavigateBack: () -> Unit
 ) {
+    val saving = saveStatus == VehicleSaveStatus.SAVING ||
+            saveStatus == VehicleSaveStatus.SAVED
+
+    BackHandler(enabled = saving) {}
     var name by remember { mutableStateOf("") }
     var primaryFuel by remember {
         mutableStateOf(FuelType.PETROL)
@@ -89,39 +88,39 @@ fun AddVehicleScreen(
                         )
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = FormWhite,
-        unfocusedContainerColor = FormWhite,
-        focusedBorderColor = FormPurple,
-        unfocusedBorderColor = FormBorder,
-        focusedTextColor = FormText,
-        unfocusedTextColor = FormText,
-        focusedLabelColor = FormPurple,
-        unfocusedLabelColor = FormText
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface
     )
 
     Scaffold(
-        containerColor = FormBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Nové vozidlo",
                         fontWeight = FontWeight.SemiBold,
-                        color = FormText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleMedium
                     )
                 },
                 navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
+                    TextButton(onClick = onNavigateBack, enabled = !saving) {
                         Text(
                             "‹",
-                            color = FormText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.headlineMedium
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = FormWhite
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
@@ -140,12 +139,15 @@ fun AddVehicleScreen(
             Text(
                 "Informace o vozidle",
                 fontWeight = FontWeight.Bold,
-                color = FormText,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium
             )
 
             OutlinedTextField(
                 value = name,
+                supportingText = {
+                    if (name.isBlank()) Text("Zadej název vozidla.")
+                },
                 onValueChange = { name = it },
                 label = { Text("Název vozidla") },
                 placeholder = { Text("Např. Škoda Octavia") },
@@ -160,7 +162,7 @@ fun AddVehicleScreen(
             Text(
                 "Primární palivo",
                 fontWeight = FontWeight.Bold,
-                color = FormText,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -176,12 +178,15 @@ fun AddVehicleScreen(
                 label = {
                     Text("Kapacita nádrže (volitelné)")
                 },
-                suffix = { Text("l") },
+                suffix = { Text(if (primaryFuel == FuelType.CNG) "kg" else "l") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
                 ),
                 isError = !validPrimary,
+                supportingText = {
+                    if (!validPrimary) Text("Zadej kladný objem nebo pole nech prázdné.")
+                },
                 shape = RoundedCornerShape(8.dp),
                 colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
@@ -201,26 +206,26 @@ fun AddVehicleScreen(
                         hasSecondaryFuel = it
                     },
                     colors = CheckboxDefaults.colors(
-                        checkedColor = FormPurple
+                        checkedColor = MaterialTheme.colorScheme.primary
                     )
                 )
 
                 Text(
                     "Vozidlo má druhé palivo",
-                    color = FormText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             if (hasSecondaryFuel) {
                 HorizontalDivider(
-                    color = FormBorder.copy(alpha = 0.4f)
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 )
 
                 Text(
                     "Sekundární palivo",
                     fontWeight = FontWeight.Bold,
-                    color = FormText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -238,7 +243,7 @@ fun AddVehicleScreen(
                     label = {
                         Text("Kapacita druhé nádrže (volitelné)")
                     },
-                    suffix = { Text("l") },
+                    suffix = { Text(if (secondaryFuel == FuelType.CNG) "kg" else "l") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal
@@ -260,6 +265,13 @@ fun AddVehicleScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            if (saveStatus == VehicleSaveStatus.FAILED) {
+                Text(
+                    text = "Vozidlo se nepodařilo uložit. Zkus to znovu.",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Button(
                 onClick = {
                     onSave(
@@ -270,14 +282,9 @@ fun AddVehicleScreen(
                         if (hasSecondaryFuel) secondaryValue else null
                     )
                 },
-                enabled = name.isNotBlank() &&
-                        validPrimary &&
-                        validSecondary,
+                enabled = !saving && name.isNotBlank() && validPrimary && validSecondary,
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = FormPurple,
-                    contentColor = FormWhite
-                ),
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -290,13 +297,14 @@ fun AddVehicleScreen(
 
             OutlinedButton(
                 onClick = onNavigateBack,
+                enabled = !saving,
                 shape = RoundedCornerShape(12.dp),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    FormPurple.copy(alpha = 0.5f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = FormPurple
+                    contentColor = MaterialTheme.colorScheme.primary
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -337,17 +345,17 @@ private fun VehicleFuelDropdown(
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = FormWhite,
-                unfocusedContainerColor = FormWhite,
-                focusedBorderColor = FormPurple,
-                unfocusedBorderColor = FormBorder,
-                focusedTextColor = FormText,
-                unfocusedTextColor = FormText
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
         )
 
         ExposedDropdownMenu(
@@ -355,7 +363,7 @@ private fun VehicleFuelDropdown(
             onDismissRequest = {
                 expanded = false
             },
-            containerColor = FormWhite
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             FuelType.entries.forEach { fuel ->
                 DropdownMenuItem(

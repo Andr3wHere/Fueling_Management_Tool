@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.produceState
 import cz.ddt.fuelingmanagementtool.data.local.entity.FuelRecordEntity
 import kotlinx.coroutines.CancellationException
+import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleSaveStatus
+
 
 sealed class Screen(val route: String) {
     data object VehicleList : Screen("vehicle_list")
@@ -112,7 +114,14 @@ fun AppNavigation() {
         composable(Screen.VehicleList.route) {
             VehicleListScreen(
                 vehicles = vehicles,
+                lastFuelingDates = savedRecords
+                    .mapNotNull { record ->
+                        record.vehicleId?.let { vehicleId -> vehicleId to record.date }
+                    }
+                    .groupBy(keySelector = { it.first }, valueTransform = { it.second })
+                    .mapValues { (_, dates) -> dates.max() },
                 onAddVehicle = {
+                    vehicleViewModel.clearSaveStatus()
                     navController.navigate(Screen.AddVehicle.route)
                 },
                 onVehicleClick = { vehicleId ->
@@ -123,26 +132,25 @@ fun AppNavigation() {
 
         // 2. Přidání vozidla
         composable(Screen.AddVehicle.route) {
-            AddVehicleScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onSave = {
-                        name,
-                        primaryFuelType,
-                        primaryTankCapacity,
-                        secondaryFuelType,
-                        secondaryTankCapacity ->
+            val status by vehicleViewModel.saveStatus.collectAsState()
 
+            LaunchedEffect(status) {
+                if (status == VehicleSaveStatus.SAVED) {
+                    navController.popBackStack()
+                }
+            }
+
+            AddVehicleScreen(
+                saveStatus = status,
+                onNavigateBack = { navController.popBackStack() },
+                onSave = { name, primaryFuel, primaryCapacity, secondaryFuel, secondaryCapacity ->
                     vehicleViewModel.addVehicle(
                         name = name,
-                        primaryFuelType = primaryFuelType,
-                        primaryTankCapacity = primaryTankCapacity,
-                        secondaryFuelType = secondaryFuelType,
-                        secondaryTankCapacity = secondaryTankCapacity
+                        primaryFuelType = primaryFuel,
+                        primaryTankCapacity = primaryCapacity,
+                        secondaryFuelType = secondaryFuel,
+                        secondaryTankCapacity = secondaryCapacity
                     )
-
-                    navController.popBackStack()
                 }
             )
         }
