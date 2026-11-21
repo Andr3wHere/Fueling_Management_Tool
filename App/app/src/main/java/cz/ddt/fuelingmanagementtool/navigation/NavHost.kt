@@ -207,6 +207,7 @@ fun AppNavigation() {
             }
 
             EditFuelRecordScreen(
+                vehicleName = vehicles.find { it.id == vehicleId }?.name ?: "Vozidlo",
                 initialLiters = ocrLiters,
                 initialPrice = ocrPrice,
                 initialUnitPrice = ocrUnitPrice,
