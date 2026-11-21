@@ -47,6 +47,8 @@ class FuelRecordViewModel @Inject constructor(
     private val _deleteSuccessful = MutableStateFlow(false)
     val deleteSuccessful = _deleteSuccessful.asStateFlow()
 
+    private val recordsBeingDeleted = mutableSetOf<Long>()
+
     suspend fun getRecordById(id: Long): FuelRecordEntity? {
         return fuelRecordRepository.getRecordById(id)
     }
@@ -134,7 +136,7 @@ class FuelRecordViewModel @Inject constructor(
     }
 
     fun deleteRecord(record: FuelRecordEntity) {
-        if (_isDeleting.value || _isSaving.value) return
+        if (_isSaving.value || !recordsBeingDeleted.add(record.id)) return
 
         _isDeleting.value = true
         _deleteSuccessful.value = false
@@ -150,7 +152,8 @@ class FuelRecordViewModel @Inject constructor(
                 _saveError.value =
                     "Záznam se nepodařilo smazat: ${e.message ?: "Neznámá chyba"}"
             } finally {
-                _isDeleting.value = false
+                recordsBeingDeleted.remove(record.id)
+                _isDeleting.value = recordsBeingDeleted.isNotEmpty()
             }
         }
     }
