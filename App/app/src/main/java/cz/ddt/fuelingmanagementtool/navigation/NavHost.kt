@@ -10,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import cz.ddt.fuelingmanagementtool.feature.camera.CameraViewfinderScreen
-import cz.ddt.fuelingmanagementtool.feature.camera.PumpOcrParser
 
 import cz.ddt.fuelingmanagementtool.feature.vehicle.AddVehicleScreen
 import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleListScreen
@@ -89,8 +88,7 @@ fun AppNavigation() {
                 ?.toLongOrNull()
 
             CameraViewfinderScreen(
-                onTextRecognized = { text, _ ->
-                    val result = PumpOcrParser().parse(text)
+                onOcrResult = { result ->
 
                     if (vehicleId != null) {
                         navController.navigate(
