@@ -54,8 +54,9 @@ fun EditFuelRecordScreen(
     recordTime: String = "16:01",
     gpsLocation: String = "ORLEN Benzina",
     isSaving: Boolean = false,
-    isDeleting: Boolean = false,
     saveError: String? = null,
+    ocrWarning: String? = null,
+    isDeleting: Boolean = false,
     onDelete: (() -> Unit)? = null
 ) {
     val isBusy = isSaving || isDeleting
@@ -198,6 +199,22 @@ fun EditFuelRecordScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            if (ocrWarning != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "⚠ $ocrWarning",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
 
             // Karta 1: Údaje o tankování
             Card(
