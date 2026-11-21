@@ -29,7 +29,8 @@ data class FuelRecordUi(
 fun FuelRecordListScreen(
     records: List<FuelRecordUi> = emptyList(),
     onAddRecord: () -> Unit = {},
-    onDeleteRecord: (Long) -> Unit = {}
+    onDeleteRecord: (Long) -> Unit = {},
+    onRecordClick: (Long) -> Unit = {}
 ) {
     var recordToDelete by remember {
         mutableStateOf<FuelRecordUi?>(null)
@@ -88,9 +89,8 @@ fun FuelRecordListScreen(
                     ) { record ->
                         FuelRecordCard(
                             record = record,
-                            onDelete = {
-                                recordToDelete = record
-                            }
+                            onClick = { onRecordClick(record.id) },
+                            onDelete = { recordToDelete = record }
                         )
                     }
                 }
@@ -137,9 +137,11 @@ fun FuelRecordListScreen(
 @Composable
 private fun FuelRecordCard(
     record: FuelRecordUi,
+    onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(

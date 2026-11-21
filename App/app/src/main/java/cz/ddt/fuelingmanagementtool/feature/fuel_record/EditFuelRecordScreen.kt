@@ -143,6 +143,18 @@ fun EditFuelRecordScreen(
         }
     }
 
+    fun updateTotalPrice(unit: BigDecimal?) {
+        val amount = parseDecimal(liters)
+        price = if (
+            amount != null && unit != null &&
+            amount > BigDecimal.ZERO && unit > BigDecimal.ZERO
+        ) {
+            formatDecimal(amount.multiply(unit))
+        } else {
+            ""
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -204,7 +216,12 @@ fun EditFuelRecordScreen(
                         value = liters,
                         onValueChange = {
                             liters = it
-                            updateUnitPrice()
+                            val unit = parseDecimal(unitPrice)
+                            if (unit != null && unit > BigDecimal.ZERO) {
+                                updateTotalPrice(unit)
+                            } else {
+                                updateUnitPrice()
+                            }
                         },
                         placeholder = {
                             Text("Např. 42,5")
@@ -270,22 +287,7 @@ fun EditFuelRecordScreen(
                         value = unitPrice,
                         onValueChange = {
                             unitPrice = it
-
-                            val amount = parseDecimal(liters)
-                            val unit = parseDecimal(it)
-
-                            if (
-                                amount != null &&
-                                unit != null &&
-                                amount > BigDecimal.ZERO &&
-                                unit > BigDecimal.ZERO
-                            ) {
-                                price = formatDecimal(
-                                    amount.multiply(unit)
-                                )
-                            } else {
-                                price = ""
-                            }
+                            updateTotalPrice(parseDecimal(it))
                         },
                         placeholder = {
                             Text("Např. 35,90")
