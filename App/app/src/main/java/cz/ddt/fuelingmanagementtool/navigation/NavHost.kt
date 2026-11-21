@@ -182,9 +182,13 @@ fun AppNavigation() {
                     val saving by editViewModel.isSaving.collectAsState()
                     val error by editViewModel.saveError.collectAsState()
                     val saved by editViewModel.saveSuccessful.collectAsState()
+                    val deleting by editViewModel.isDeleting.collectAsState()
+                    val deleted by editViewModel.deleteSuccessful.collectAsState()
 
-                    LaunchedEffect(saved) {
-                        if (saved) navController.popBackStack()
+                    LaunchedEffect(saved, deleted) {
+                        if (saved || deleted) {
+                            navController.popBackStack()
+                        }
                     }
 
                     EditFuelRecordScreen(
@@ -194,6 +198,8 @@ fun AppNavigation() {
                         initialPrice = formatRecordInput(record.totalPriceHalers),
                         initialUnitPrice = formatRecordInput(record.unitPriceHalersPerLitre),
                         isSaving = saving,
+                        isDeleting = deleting,
+                        onDelete = { editViewModel.deleteRecord(record) },
                         saveError = error,
                         onBack = { navController.popBackStack() },
                         onSave = { date, liters, price, unitPrice ->

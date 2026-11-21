@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -113,5 +114,34 @@ class FuelRecordDaoTest {
         }
 
         assertEquals(listOf(editedRecord), updates.receive())
+    }
+
+    @Test
+    fun deletesOnlySelectedRecord() = runTest {
+        val firstRecord = FuelRecordEntity(
+            date = LocalDate.of(2026, 11, 15),
+            volumeCentilitres = 3690,
+            totalPriceHalers = 139851,
+            unitPriceHalersPerLitre = 3790,
+            vehicleId = 7L
+        )
+        val secondRecord = firstRecord.copy(date = firstRecord.date.plusDays(1))
+        val recordToDelete = firstRecord.copy(id = fuelRecordDao.insertRecord(firstRecord))
+        val remainingRecord = secondRecord.copy(id = fuelRecordDao.insertRecord(secondRecord))
+
+        val updates = Channel<List<FuelRecordEntity>>(Channel.UNLIMITED)
+        backgroundScope.launch {
+            fuelRecordDao.getAllRecords()
+                .distinctUntilChanged()
+                .collect { records ->
+                    updates.send(records)
+                }
+        }
+        assertEquals(listOf(remainingRecord, recordToDelete), updates.receive())
+
+        fuelRecordDao.deleteRecord(recordToDelete)
+
+        assertEquals(listOf(remainingRecord), updates.receive())
+        assertNull(fuelRecordDao.getRecordById(recordToDelete.id))
     }
 }
