@@ -206,6 +206,13 @@ fun AppNavigation() {
                 initialPrice = ocrPrice,
                 initialUnitPrice = ocrUnitPrice,
                 ocrWarning = ocrWarning,
+                onRetakePhoto = {
+                    if (vehicleId != null) {
+                        navController.navigate("camera/$vehicleId") {
+                            popUpTo(Screen.EditFuelRecord.route) { inclusive = true }
+                        }
+                    }
+                },
                 onSave = { date, liters, price, unitPrice ->
                     if (vehicleId != null) {
                         fuelRecordViewModel.saveRecord(
