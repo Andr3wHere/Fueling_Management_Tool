@@ -90,7 +90,7 @@ dependencies {
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
-    implementation("com.google.guava:guava:33.0.0-android")
+    implementation("com.google.guava:guava:33.8.0-android")
 
     // ML Kit
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
