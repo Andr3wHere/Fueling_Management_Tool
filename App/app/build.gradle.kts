@@ -93,7 +93,7 @@ dependencies {
     implementation("com.google.guava:guava:33.8.0-android")
 
     // ML Kit
-    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 }
 
 ksp {
