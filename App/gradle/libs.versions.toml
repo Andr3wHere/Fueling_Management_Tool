@@ -16,7 +16,7 @@ coroutines = "1.11.0"
 
 hilt = "2.52"
 hiltNavigationCompose = "1.2.0"
-navigationCompose = "2.8.5"
+navigationCompose = "2.10.2"
 camerax = "1.4.0"
 
 [libraries]
