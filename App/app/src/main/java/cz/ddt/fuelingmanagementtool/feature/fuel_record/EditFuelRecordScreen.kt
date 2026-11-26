@@ -2,21 +2,28 @@
 package cz.ddt.fuelingmanagementtool.feature.fuel_record
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import cz.ddt.fuelingmanagementtool.ui.icons.AppIcons
 import cz.ddt.fuelingmanagementtool.ui.theme.FuelingManagementToolTheme
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
 
@@ -37,8 +44,15 @@ private fun formatDecimal(value: BigDecimal): String =
         .toPlainString()
         .replace('.', ',')
 
+enum class FuelRecordFormMode {
+    CAMERA_CREATE,
+    MANUAL_CREATE,
+    EDIT_EXISTING
+}
+
 @Composable
 fun EditFuelRecordScreen(
+    mode: FuelRecordFormMode = FuelRecordFormMode.MANUAL_CREATE,
     onSave: (String, String, String, String) -> Unit =
         { _, _, _, _ -> },
     onBack: () -> Unit = {},
@@ -51,7 +65,7 @@ fun EditFuelRecordScreen(
     initialLiters: String = "",
     initialPrice: String = "",
     initialUnitPrice: String = "",
-    recordTime: String = "16:01",
+    recordTime: String = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
     gpsLocation: String = "ORLEN Benzina",
     isSaving: Boolean = false,
     saveError: String? = null,
@@ -60,6 +74,8 @@ fun EditFuelRecordScreen(
     onDelete: (() -> Unit)? = null
 ) {
     val isBusy = isSaving || isDeleting
+
+    BackHandler(enabled = isBusy) {}
 
     var date by remember(initialDate) {
         mutableStateOf(initialDate)
@@ -163,314 +179,374 @@ fun EditFuelRecordScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    horizontal = 16.dp
-                ),
-            verticalArrangement =
-                Arrangement.spacedBy(14.dp)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Kontrola záznamu",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = vehicleName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            if (ocrWarning != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, top = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    enabled = !isBusy
                 ) {
-                    Text(
-                        text = "⚠ $ocrWarning",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium
+                    Icon(
+                        imageVector = AppIcons.ArrowBack,
+                        contentDescription = "Zpět",
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (mode == FuelRecordFormMode.EDIT_EXISTING) {
+                        "Upravit tankování"
+                    } else {
+                        "Nové tankování"
+                    },
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
 
-            // Karta 1: Údaje o tankování
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             ) {
+                Text(
+                    text = "Kontrola záznamu",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = vehicleName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement =
                         Arrangement.spacedBy(12.dp)
                 ) {
-
-                    Text(
-                        "Množství paliva",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    OutlinedTextField(
-                        value = liters,
-                        onValueChange = {
-                            liters = it
-                            val unit = parseDecimal(unitPrice)
-                            if (unit != null && unit > BigDecimal.ZERO) {
-                                updateTotalPrice(unit)
-                            } else {
-                                updateUnitPrice()
-                            }
-                        },
-                        placeholder = {
-                            Text("Např. 42,5")
-                        },
-                        suffix = { Text("l") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Decimal
-                        ),
-                        singleLine = true,
-                        enabled = !isBusy,
-                        isError = submitted && !validLiters,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (submitted && !validLiters) {
-                        Text(
-                            text = "Pole obsahuje povinný údaj",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                if (ocrWarning != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
                         )
-                    }
-
-                    Text(
-                        "Celková cena",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    OutlinedTextField(
-                        value = price,
-                        onValueChange = {
-                            price = it
-                            updateUnitPrice()
-                        },
-                        placeholder = {
-                            Text("Např. 1 520")
-                        },
-                        suffix = { Text("Kč") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Decimal
-                        ),
-                        singleLine = true,
-                        enabled = !isBusy,
-                        isError = submitted && !validPrice,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (submitted && !validPrice) {
-                        Text(
-                            text = "Pole obsahuje povinný údaj",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    Text(
-                        "Jednotková cena",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    OutlinedTextField(
-                        value = unitPrice,
-                        onValueChange = {
-                            unitPrice = it
-                            updateTotalPrice(parseDecimal(it))
-                        },
-                        placeholder = {
-                            Text("Např. 35,90")
-                        },
-                        suffix = { Text("Kč/l") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Decimal
-                        ),
-                        singleLine = true,
-                        enabled = !isBusy,
-                        isError = submitted && !validUnitPrice,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (submitted && !validUnitPrice) {
-                        Text(
-                            text = "Pole obsahuje povinný údaj",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment =
-                            androidx.compose.ui.Alignment.CenterVertically
                     ) {
-                        Checkbox(
-                            checked = fullTank,
-                            onCheckedChange = {
-                                fullTank = it
-                            },
-                            enabled = !isBusy
-                        )
-
                         Text(
-                            text = "Plné tankování",
+                            text = "⚠ $ocrWarning",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
-            }
-
-            // Karta 2: Informace o záznamu
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement =
-                        Arrangement.spacedBy(10.dp)
+                // Karta 1: Údaje o tankování
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
-
-                    Text(
-                        text = "Informace o záznamu",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    OutlinedTextField(
-                        value = date,
-                        onValueChange = {
-                            date = it
-                        },
-                        label = {
-                            Text("Datum")
-                        },
-                        placeholder = {
-                            Text("dd.MM.rrrr")
-                        },
-                        singleLine = true,
-                        enabled = !isBusy,
-                        isError = submitted && !validDate,
-                        supportingText = {
-                            if (submitted && !validDate) {
-                                Text(
-                                    "Zadejte datum ve formátu dd.MM.rrrr"
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    InfoRow("Čas", recordTime)
-                    InfoRow("GPS poloha", gpsLocation)
-                }
-            }
-
-            if (saveError != null) {
-                Text(
-                    text = saveError,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Button(
-                onClick = {
-                    submitted = true
-
-                    if (
-                        validDate &&
-                        validLiters &&
-                        validPrice &&
-                        validUnitPrice
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement =
+                            Arrangement.spacedBy(12.dp)
                     ) {
-                        onSave(
-                            LocalDate.parse(date, formatter)
-                                .toString(),
-                            liters,
-                            price,
-                            unitPrice
+
+                        Text(
+                            "Množství paliva",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        OutlinedTextField(
+                            value = liters,
+                            onValueChange = {
+                                liters = it
+                                val unit = parseDecimal(unitPrice)
+                                if (unit != null && unit > BigDecimal.ZERO) {
+                                    updateTotalPrice(unit)
+                                } else {
+                                    updateUnitPrice()
+                                }
+                            },
+                            placeholder = {
+                                Text("Např. 42,5")
+                            },
+                            suffix = { Text("l") },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Next
+                            ),
+                            singleLine = true,
+                            enabled = !isBusy,
+                            isError = submitted && !validLiters,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (submitted && !validLiters) {
+                            Text(
+                                text = "Pole obsahuje povinný údaj",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        Text(
+                            "Celková cena",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        OutlinedTextField(
+                            value = price,
+                            onValueChange = {
+                                price = it
+                                updateUnitPrice()
+                            },
+                            placeholder = {
+                                Text("Např. 1 520")
+                            },
+                            suffix = { Text("Kč") },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Next
+                            ),
+                            singleLine = true,
+                            enabled = !isBusy,
+                            isError = submitted && !validPrice,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (submitted && !validPrice) {
+                            Text(
+                                text = "Pole obsahuje povinný údaj",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        Text(
+                            "Jednotková cena",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        OutlinedTextField(
+                            value = unitPrice,
+                            onValueChange = {
+                                unitPrice = it
+                                updateTotalPrice(parseDecimal(it))
+                            },
+                            placeholder = {
+                                Text("Např. 35,90")
+                            },
+                            suffix = { Text("Kč/l") },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Next
+                            ),
+                            singleLine = true,
+                            enabled = !isBusy,
+                            isError = submitted && !validUnitPrice,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (submitted && !validUnitPrice) {
+                            Text(
+                                text = "Pole obsahuje povinný údaj",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        Row(
+                            verticalAlignment =
+                                androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = fullTank,
+                                onCheckedChange = {
+                                    fullTank = it
+                                },
+                                enabled = !isBusy
+                            )
+
+                            Text(
+                                text = "Plné tankování",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
+                // Karta 2: Informace o záznamu
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement =
+                            Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        Text(
+                            text = "Informace o záznamu",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        OutlinedTextField(
+                            value = date,
+                            onValueChange = {
+                                date = it
+                            },
+                            label = {
+                                Text("Datum")
+                            },
+                            placeholder = {
+                                Text("dd.MM.rrrr")
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done
+                            ),
+                            singleLine = true,
+                            enabled = !isBusy,
+                            isError = submitted && !validDate,
+                            supportingText = {
+                                if (submitted && !validDate) {
+                                    Text(
+                                        "Zadejte datum ve formátu dd.MM.rrrr"
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        InfoRow("Čas", recordTime)
+                        InfoRow("GPS poloha", gpsLocation)
+                    }
+                }
+
+                if (saveError != null) {
+                    Text(
+                        text = saveError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        submitted = true
+
+                        if (
+                            validDate &&
+                            validLiters &&
+                            validPrice &&
+                            validUnitPrice
+                        ) {
+                            onSave(
+                                LocalDate.parse(date, formatter)
+                                    .toString(),
+                                liters,
+                                price,
+                                unitPrice
+                            )
+                        }
+                    },
+                    enabled = !isBusy,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Uložit tankování")
+                    }
+                }
+
+                if (mode == FuelRecordFormMode.CAMERA_CREATE) {
+                    OutlinedButton(
+                        onClick = onRetakePhoto,
+                        enabled = !isBusy,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Text("Vyfotit znovu")
+                    }
+                }
+
+                if (mode != FuelRecordFormMode.EDIT_EXISTING) {
+                    TextButton(
+                        onClick = onDiscard,
+                        enabled = !isBusy,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Zahodit záznam")
+                    }
+                }
+                onDelete?.let { deleteRecord ->
+                    TextButton(
+                        onClick = { showDeleteDialog = true },
+                        enabled = !isBusy,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Smazat uložené tankování")
+                    }
+
+                    if (showDeleteDialog) {
+                        DeleteFuelRecordDialog(
+                            date = initialDate,
+                            onConfirm = {
+                                showDeleteDialog = false
+                                deleteRecord()
+                            },
+                            onDismiss = { showDeleteDialog = false }
                         )
                     }
-                },
-                enabled = !isBusy,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                if (isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Uložit tankování")
                 }
             }
 
-            OutlinedButton(
-                onClick = onRetakePhoto,
-                enabled = !isBusy,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Vyfotit znovu")
-            }
-
-            TextButton(
-                onClick = onDiscard,
-                enabled = !isBusy,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Zahodit záznam")
-            }
-            onDelete?.let { deleteRecord ->
-                TextButton(
-                    onClick = { showDeleteDialog = true },
-                    enabled = !isBusy,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Smazat uložené tankování")
-                }
-
-                if (showDeleteDialog) {
-                    DeleteFuelRecordDialog(
-                        date = initialDate,
-                        onConfirm = {
-                            showDeleteDialog = false
-                            deleteRecord()
-                        },
-                        onDismiss = { showDeleteDialog = false }
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
         }
     }
 }
@@ -507,6 +583,7 @@ private fun EditFuelRecordLightPreview() {
         dynamicColor = false
     ) {
         EditFuelRecordScreen(
+            mode = FuelRecordFormMode.CAMERA_CREATE,
             initialDate = "18.10.2026",
             initialLiters = "42,5",
             initialPrice = "1520"
@@ -526,6 +603,7 @@ private fun EditFuelRecordDarkPreview() {
         dynamicColor = false
     ) {
         EditFuelRecordScreen(
+            mode = FuelRecordFormMode.CAMERA_CREATE,
             initialDate = "18.10.2026",
             initialLiters = "42,5",
             initialPrice = "1520"
