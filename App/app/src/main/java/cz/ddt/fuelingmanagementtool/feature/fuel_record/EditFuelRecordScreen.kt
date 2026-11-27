@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -104,8 +107,14 @@ fun EditFuelRecordScreen(
 
     BackHandler(enabled = isBusy) {}
 
-    var date by remember(initialDate) {
-        mutableStateOf(initialDate)
+    var selectedDate by remember(initialDate) {
+        mutableStateOf(parseInitialFuelRecordDate(initialDate))
+    }
+
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val formattedDate = remember(selectedDate) {
+        formatFuelRecordDate(selectedDate)
     }
 
     var liters by remember(initialLiters) {
@@ -149,12 +158,6 @@ fun EditFuelRecordScreen(
     }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
-
-    val validDate = date.matches(
-        Regex("""\d{2}\.\d{2}\.\d{4}""")
-    ) && runCatching {
-        LocalDate.parse(date, FUEL_RECORD_DATE_FORMATTER)
-    }.isSuccess
 
     val validLiters =
         parseDecimal(liters)?.let {
@@ -385,7 +388,7 @@ fun EditFuelRecordScreen(
                             suffix = { Text("Kč/l") },
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Decimal,
-                                imeAction = ImeAction.Next
+                                imeAction = ImeAction.Done
                             ),
                             singleLine = true,
                             enabled = !isBusy,
@@ -429,9 +432,12 @@ fun EditFuelRecordScreen(
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement =
-                            Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = 8.dp
+                        )
                     ) {
 
                         Text(
@@ -440,32 +446,66 @@ fun EditFuelRecordScreen(
                             fontWeight = FontWeight.SemiBold
                         )
 
-                        OutlinedTextField(
-                            value = date,
-                            onValueChange = {
-                                date = it
-                            },
-                            label = {
-                                Text("Datum")
-                            },
-                            placeholder = {
-                                Text("dd.MM.rrrr")
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done
-                            ),
-                            singleLine = true,
-                            enabled = !isBusy,
-                            isError = submitted && !validDate,
-                            supportingText = {
-                                if (submitted && !validDate) {
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Datum",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Surface(
+                                onClick = { showDatePicker = true },
+                                enabled = !isBusy,
+                                shape = MaterialTheme.shapes.small,
+                                color = Color.Transparent,
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = if (!isBusy) {
+                                        MaterialTheme.colorScheme.outline
+                                    } else {
+                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.38f)
+                                    }
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Text(
-                                        "Zadejte datum ve formátu dd.MM.rrrr"
+                                        text = formattedDate,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (!isBusy) {
+                                            MaterialTheme.colorScheme.onSurface
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                        }
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Outlined.DateRange,
+                                        contentDescription = "Vybrat datum",
+                                        modifier = Modifier.size(18.dp),
+                                        tint = if (!isBusy) {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                alpha = 0.38f
+                                            )
+                                        }
                                     )
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            }
+                        }
 
                         InfoRow("Čas", recordTime)
                         InfoRow("GPS poloha", gpsLocation)
@@ -485,14 +525,12 @@ fun EditFuelRecordScreen(
                         submitted = true
 
                         if (
-                            validDate &&
                             validLiters &&
                             validPrice &&
                             validUnitPrice
                         ) {
                             onSave(
-                                LocalDate.parse(date, FUEL_RECORD_DATE_FORMATTER)
-                                    .toString(),
+                                selectedDate.toString(),
                                 liters,
                                 price,
                                 unitPrice
@@ -571,6 +609,56 @@ fun EditFuelRecordScreen(
         }
         }
     }
+
+    if (showDatePicker && !isBusy) {
+        FuelDatePickerDialog(
+            initialDate = selectedDate,
+            onDateSelected = { pickedDate ->
+                selectedDate = pickedDate
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FuelDatePickerDialog(
+    initialDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val initialMillis = remember(initialDate) {
+        initialDate.toDatePickerUtcMillis()
+    }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialMillis,
+        initialDisplayedMonthMillis = initialMillis
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        onDateSelected(utcMillisToLocalDate(millis))
+                    }
+                    onDismiss()
+                },
+                enabled = datePickerState.selectedDateMillis != null
+            ) {
+                Text("Potvrdit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Zrušit")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
 }
 
 @Composable
@@ -579,8 +667,11 @@ private fun InfoRow(
     value: String
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
