@@ -16,6 +16,7 @@ import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleListScreen
 import cz.ddt.fuelingmanagementtool.feature.vehicle.VehicleViewModel
 
 import cz.ddt.fuelingmanagementtool.feature.fuel_record.EditFuelRecordScreen
+import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordFormMode
 import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordListScreen
 import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordUi
 import cz.ddt.fuelingmanagementtool.feature.fuel_record.FuelRecordViewModel
@@ -215,6 +216,7 @@ fun AppNavigation() {
             }
 
             EditFuelRecordScreen(
+                mode = if (fromCamera) FuelRecordFormMode.CAMERA_CREATE else FuelRecordFormMode.MANUAL_CREATE,
                 vehicleName = vehicles.find { it.id == vehicleId }?.name ?: "Vozidlo",
                 initialLiters = ocrLiters,
                 initialPrice = ocrPrice,
@@ -288,6 +290,7 @@ fun AppNavigation() {
                     }
 
                     EditFuelRecordScreen(
+                        mode = FuelRecordFormMode.EDIT_EXISTING,
                         vehicleName = vehicles.find { it.id == vehicleId }?.name ?: "Vozidlo",
                         initialDate = record.date.format(dateFormatter),
                         initialLiters = formatRecordInput(record.volumeCentilitres),
