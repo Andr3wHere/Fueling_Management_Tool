@@ -22,8 +22,10 @@ import cz.ddt.fuelingmanagementtool.ui.icons.AppIcons
 import cz.ddt.fuelingmanagementtool.ui.theme.FuelingManagementToolTheme
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
 
@@ -44,6 +46,33 @@ private fun formatDecimal(value: BigDecimal): String =
         .toPlainString()
         .replace('.', ',')
 
+private val FUEL_RECORD_DATE_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd.MM.uuuu")
+        .withResolverStyle(ResolverStyle.STRICT)
+
+internal fun formatFuelRecordDate(date: LocalDate): String =
+    date.format(FUEL_RECORD_DATE_FORMATTER)
+
+internal fun parseInitialFuelRecordDate(
+    initialDate: String,
+    fallbackDate: LocalDate = LocalDate.now()
+): LocalDate {
+    val trimmed = initialDate.trim()
+    if (trimmed.isEmpty()) return fallbackDate
+
+    return runCatching {
+        LocalDate.parse(trimmed, FUEL_RECORD_DATE_FORMATTER)
+    }.recoverCatching {
+        LocalDate.parse(trimmed)
+    }.getOrDefault(fallbackDate)
+}
+
+internal fun LocalDate.toDatePickerUtcMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+internal fun utcMillisToLocalDate(millis: Long): LocalDate =
+    Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+
 enum class FuelRecordFormMode {
     CAMERA_CREATE,
     MANUAL_CREATE,
@@ -59,9 +88,7 @@ fun EditFuelRecordScreen(
     onRetakePhoto: () -> Unit = {},
     onDiscard: () -> Unit = onBack,
     vehicleName: String = "Volkswagen Tayron",
-    initialDate: String = LocalDate.now().format(
-        DateTimeFormatter.ofPattern("dd.MM.uuuu")
-    ),
+    initialDate: String = formatFuelRecordDate(LocalDate.now()),
     initialLiters: String = "",
     initialPrice: String = "",
     initialUnitPrice: String = "",
@@ -123,15 +150,10 @@ fun EditFuelRecordScreen(
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val formatter = remember {
-        DateTimeFormatter.ofPattern("dd.MM.uuuu")
-            .withResolverStyle(ResolverStyle.STRICT)
-    }
-
     val validDate = date.matches(
         Regex("""\d{2}\.\d{2}\.\d{4}""")
     ) && runCatching {
-        LocalDate.parse(date, formatter)
+        LocalDate.parse(date, FUEL_RECORD_DATE_FORMATTER)
     }.isSuccess
 
     val validLiters =
@@ -469,7 +491,7 @@ fun EditFuelRecordScreen(
                             validUnitPrice
                         ) {
                             onSave(
-                                LocalDate.parse(date, formatter)
+                                LocalDate.parse(date, FUEL_RECORD_DATE_FORMATTER)
                                     .toString(),
                                 liters,
                                 price,
